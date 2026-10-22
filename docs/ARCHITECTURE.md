@@ -1,0 +1,184 @@
+# ARCHITECTURE — Setu
+
+Status: draft v0.1. Pairs with `docs/SPEC.md`. Significant changes are logged in `docs/DECISIONS.md`.
+
+## 1. Principles
+
+1. **Heavy GIS happens offline.** The browser never parses raw DEMs or OSM extracts. It loads small, validated, static artifacts.
+2. **The simulation is a pure function.** `run(graph, scenario, seed) -> result`. No rendering, no DOM, no wall clock, no `Math.random`.
+3. **Rendering reads results; it does not decide them.** The 3D layer visualises output from the sim. It never computes metrics.
+4. **The LLM narrates; it does not compute.** All numbers originate in the sim core.
+5. **Everything shown is traceable** to a dataset, a computed value, or a labelled assumption.
+
+## 2. System overview
+
+```mermaid
+flowchart LR
+  subgraph Offline["Offline: pipeline/ (Python)"]
+    RAW[data/raw<br/>DEM, OSM, facilities, villages] --> BUILD[pipeline.build]
+    BUILD --> VAL[pipeline.validate]
+    VAL --> ART[data/processed<br/>terrain tiles, graph.json,<br/>villages.json, facilities.json,<br/>provenance.json]
+  end
+
+  subgraph Web["Browser: web/ (React + TS)"]
+    ART --> LOAD[Asset loader]
+    LOAD --> STORE[(Zustand store)]
+    STORE <--> WORKER[Sim worker<br/>web/src/sim]
+    STORE --> RENDER[3D scene<br/>react-three-fiber]
+    STORE --> UI[Panels, dashboard, timeline]
+  end
+
+  subgraph Server["server/ (serverless)"]
+    PROXY[/api/brief<br/>validate in, call LLM, validate out/]
+  end
+
+  UI -- metrics JSON --> PROXY
+  PROXY -- validated brief --> UI
+```
+
+## 3. Repository layout
+
+```
+Setu/
+  CLAUDE.md
+  README.md
+  docs/                 SPEC, ARCHITECTURE, RULES, DATA, DECISIONS, ROADMAP
+  data/
+    raw/                immutable inputs (gitignored; see DATA.md)
+    processed/          pipeline outputs consumed by the web app
+  pipeline/             Python: build and validate processed artifacts
+  server/               serverless function(s): LLM brief proxy
+  web/
+    public/             static assets served as-is
+    src/
+      sim/              PURE TS: graph, routing, events, agents, metrics, assumptions
+      render/           react-three-fiber scene: terrain, roads, villages, agents
+      ui/               panels, dashboard, timeline, controls
+      state/            Zustand slices (scene, scenario, run, ui)
+      lib/              shared helpers (units, geo, i18n, schema types)
+  .github/
+```
+
+Import rules (enforced by lint):
+
+- `sim/` imports from `lib/` only. It must not import `react`, `three`, `@react-three/*`, or reference `window`/`document`.
+- `render/` and `ui/` import from `state/` and `lib/`, never directly from `sim/` internals. They get results via the store.
+- `state/` is the only module that talks to the worker.
+
+## 4. Data artifacts (produced by `pipeline/`)
+
+Schemas are defined in `docs/DATA.md`. Summary:
+
+| Artifact | Purpose |
+|---|---|
+| terrain tiles | heightmap for the mesh, plus bounds and vertical scale metadata |
+| `graph.json` | road network: nodes (junctions, village access points, facility access points) and edges (length, class, elevation profile, geometry) |
+| `villages.json` | name, location, population (with estimate method), access node id |
+| `facilities.json` | name, tier, location, access node id |
+| `provenance.json` | per-dataset source, licence, retrieval date, notes on gaps and manual patches |
+
+The validator fails the build if: the graph is disconnected in unexpected ways, a village or facility has no access node, coordinates fall outside the corridor bounds, units are missing, or required provenance fields are empty.
+
+## 5. Coordinate systems and units
+
+- Stored and exchanged geometry: WGS84 (EPSG:4326), longitude and latitude, elevation in metres.
+- Simulation and rendering space: a local projected system in metres, set per corridor. The Rudraprayag corridor sits in UTM zone 44N (EPSG:32644). The zone is configured per area, not hard-coded.
+- Conversion happens at two boundaries only: pipeline output (already projected for the graph) and `lib/geo`.
+- Units in code are SI, with suffixes in names: `length_m`, `time_s`, `speed_kmh` where non-SI is unavoidable. Time in the sim is seconds from event start.
+
+## 6. Simulation model (`web/src/sim`)
+
+### 6.1 Network
+
+- Graph `G = (V, E)`. Nodes: junctions, village access points, facility access points. Edges: road segments with `length_m`, `road_class`, `free_speed_kmh`, and an elevation profile.
+- Travel time on an edge: `length_m / speed`, where speed starts from the road-class free speed and is reduced by a slope factor. Free speeds and slope factors live in `assumptions.ts` with their basis. They are assumptions until validated.
+
+### 6.2 Events
+
+An event is a list of timed edge mutations: `{ edge_id, t_close_s, t_reopen_s | null, speed_factor }`. Scenario definitions (`sim/scenarios/*`) translate user input (target, severity) into mutations. Clearance times come from an assumptions table keyed by severity and road class.
+
+### 6.3 Routing and metrics
+
+- Access times for all villages are computed with a multi-source Dijkstra from all open facilities over the reversed graph, so one pass answers every village.
+- The sim recomputes access times at each topology change (an edge closing or reopening), not every frame. Results form a time series of metric snapshots.
+- Metric definitions are in `docs/SPEC.md` section 6. The implementation lives in `sim/metrics.ts` and must match them exactly.
+
+### 6.4 Agents
+
+- Agents are a visual and behavioural layer on top of the network model, not the source of metrics.
+- Population is represented by a bounded number of agents per village (scaled, for example one agent per N people, capped globally at about 300).
+- Each scenario defines a small finite-state machine per agent role: resident, ambulance. States such as `idle`, `moving_to_clinic`, `moving_to_safe_point`, `waiting_at_block`, `rerouting`, `arrived`.
+- Movement follows shortest paths on the surviving graph and is re-planned on topology change.
+- Agent decisions use a seeded PRNG (`sim/rng.ts`, for example mulberry32), only for tie-breaking and timing jitter. No randomness decides outcomes the dashboard reports.
+
+### 6.5 Determinism
+
+`run(inputs, seed)` is reproducible. Results are serialisable as a "run record" (inputs, seed, version) so a scenario can be replayed or exported.
+
+## 7. Worker protocol
+
+The sim runs in a Web Worker so the UI never blocks.
+
+| Message | Direction | Payload |
+|---|---|---|
+| `init` | main to worker | graph, villages, facilities (structured clone, once) |
+| `run` | main to worker | scenario params, seed, run id |
+| `frame` | worker to main | agent positions as a transferable typed array, sim time, run id |
+| `metrics` | worker to main | metric snapshots (time series), run id |
+| `done` | worker to main | run record, run id |
+| `error` | worker to main | message, run id |
+
+A new `run` cancels the previous one (match on run id). Agent positions are sent as transferable `Float32Array`s to avoid copying.
+
+## 8. Rendering (`web/src/render`)
+
+- **Terrain:** mesh from heightmap tiles, with a vertical exaggeration parameter and chunked loading. Shading is restrained: hillshade-style lighting, muted palette, no decorative textures.
+- **Roads:** line geometry draped on the terrain by sampling heights. Closed segments change style and animate once on closure.
+- **Villages and facilities:** instanced markers with labels via screen-space projection, decluttered at distance.
+- **Agents:** instanced meshes, updated from the latest `frame` buffer at a fixed rate.
+- **Camera:** orbit controls with constrained pitch, zoom limits, and a reset control.
+- **Picking:** raycast for terrain points; for road selection, snap to the nearest edge within a pixel tolerance using a spatial index built from the graph.
+- **Budget:** see SPEC section 10. Measure on the reference machine before adding any visual effect.
+
+## 9. State (`web/src/state`)
+
+Zustand slices:
+
+- `scene`: loaded assets, camera, layer visibility
+- `scenario`: selected scenario, params, target
+- `run`: run id, status, metric time series, current sim time, playback state
+- `ui`: panels, before/after toggle, language
+
+Rules: the store is the only owner of worker communication. Derived values (for example "current metric snapshot at time t") are selectors, not stored copies.
+
+## 10. LLM brief service (`server/`)
+
+- One endpoint: `POST /api/brief`.
+- Steps: validate request against the input schema, build the prompt from a fixed template, call the model, parse and validate the output against the output schema, reject output containing numbers absent from the input, return the result.
+- The API key lives in server environment variables only.
+- Basic rate limiting and request size limits.
+- The client falls back to pre-generated briefs for the guided scenarios when the call fails, and marks them as pre-generated.
+- Contract: `docs/SPEC.md` section 8.
+
+## 11. Testing strategy
+
+- **Sim core (Vitest):** small fixture graphs with known answers. Properties to test: closing an edge never decreases any access time; reopening restores the original access times; the same seed gives identical run records; isolated villages are exactly those unreachable from all open facilities.
+- **Metric golden tests:** for the real corridor, snapshot key metrics for fixed scenarios and seeds, so regressions are visible in review.
+- **Pipeline validators:** run in CI against `data/processed`.
+- **UI smoke test:** load, trigger S1, see a dashboard. Add only if time allows.
+
+## 12. Build and deploy
+
+- Static web build plus one serverless function, hosted on Netlify (Netlify Functions for `/api/brief`).
+- Large processed assets: keep each file under GitHub's 100 MB limit, and prefer tiles that load progressively. If assets grow, use Git LFS or host them from the deploy rather than committing.
+- Environment variables are documented in `README.md`; no secrets in the repo.
+
+## 13. Known risks
+
+| Risk | Mitigation |
+|---|---|
+| Thin or missing hill road data in OSM | Hand-patch the corridor, record each patch in `provenance.json`, show it in the provenance panel |
+| Village population not available at usable resolution | Estimate from building counts with a stated persons-per-household assumption |
+| Terrain mesh too heavy for mid-range laptops | Chunked tiles, lower resolution beyond the focus area, measure early |
+| LLM output invents figures | Server-side number check against input, schema validation, pre-generated fallback |
+| Scope creep into extra scenarios | Stretch scenarios stay behind the v1 acceptance criteria |

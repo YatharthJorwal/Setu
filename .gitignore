@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# build output
+dist/
+build/
+.netlify/
+
+# environment and secrets
+.env
+.env.*
+!.env.example
+
+# raw data is immutable input and never committed (see docs/DATA.md)
+data/raw/*
+!data/raw/.gitkeep
+
+# editor and OS
+.DS_Store
+.idea/
+.vscode/
+*.log
