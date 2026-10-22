@@ -1,0 +1,5 @@
+requests>=2.31
+numpy>=1.26
+networkx>=3.2
+# DEM statistics in the audit (optional; the audit skips DEM checks without it)
+rasterio>=1.3

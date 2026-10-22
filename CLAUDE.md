@@ -20,6 +20,7 @@ It is a simulator for illustration and planning discussion. It is not an operati
 | `docs/DATA.md` | touching datasets, the pipeline, schemas, attribution |
 | `docs/DECISIONS.md` | before changing a past choice; log every new significant choice here |
 | `docs/ROADMAP.md` | planning work, checking what is in or out of the current milestone |
+| `docs/IDEA_DRAFT.md` | writing or updating the hackathon submission text |
 
 If code and docs disagree, stop and resolve it. Either fix the code or update the doc in the same change. Never leave them silently inconsistent.
 
@@ -45,19 +46,28 @@ If code and docs disagree, stop and resolve it. Either fix the code or update th
 
 ## Commands
 
-Scaffolding has not landed yet. These are the planned names. Update this section the moment they exist, and do not invent others.
+Pipeline audit tooling exists and works (run from the repo root). The web app and the build/validate steps do not exist yet. Update this section the moment they do, and do not invent others.
 
 ```
-web:       npm run dev | build | test | lint | typecheck
-pipeline:  python -m pipeline.build --area rudraprayag
-           python -m pipeline.validate
+pipeline (exists):
+  pip install -r pipeline/requirements.txt
+  python -m pipeline.fetch_osm --area rudraprayag
+  python -m pipeline.fetch_dem --area rudraprayag
+  python -m pipeline.audit --area rudraprayag [--skip-dem]
+  python -m unittest discover -s pipeline/tests -t .
+
+planned (not yet written):
+  web:       npm run dev | build | test | lint | typecheck
+  pipeline:  python -m pipeline.build --area rudraprayag
+             python -m pipeline.validate
 ```
 
 ## Current status
 
-Pre-alpha. Repo contains docs and an empty scaffold only.
+Pre-alpha. Docs, an empty web scaffold, and the data-audit scripts exist.
+Desk audit done (see `docs/DATA.md` section 6). Local audit on real files is the next step and has not been run.
 Pilot area: Rudraprayag corridor (proposed, confirm in `docs/DECISIONS.md` ADR-006).
-Next: data audit (see `docs/DATA.md`, "Audit checklist"), then terrain render.
+Next: run the local audit, confirm the corridor, then terrain render (M2).
 
 ## Definition of done (any change)
 

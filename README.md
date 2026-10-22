@@ -29,6 +29,7 @@ Built on real terrain and real roads for a valley corridor in Uttarakhand. Tap a
 | [`docs/DATA.md`](docs/DATA.md) | Datasets, schemas, audit checklist, attribution |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Decision log |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Milestones, priorities, cut list |
+| [`docs/IDEA_DRAFT.md`](docs/IDEA_DRAFT.md) | Draft hackathon submission text |
 
 ## Stack
 

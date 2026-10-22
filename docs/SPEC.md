@@ -17,6 +17,8 @@ Existing tools mostly show hazard risk (landslide early-warning dashboards) or c
 
 Fact-check both figures against the original reports before quoting them in any submission.
 
+Where Setu sits relative to forecasting: the Geological Survey of India has issued operational and experimental landslide forecast bulletins since the 2025 monsoon for 21 districts, Rudraprayag among them. Setu does not compete with that. It starts where a forecast ends and asks what the consequences are for access and care if the roads fail. A 2025 conference abstract on Rudraprayag also reports that most of the 196 confirmed landslides it mapped (2019 to 2023) were concentrated near road networks, which is why S1 models road-segment landslides. This is a single study; treat it as supporting context, not proof.
+
 ## 3. Primary user and decision
 
 **User:** a district disaster control room officer (DDMA / SDRF level).
@@ -201,5 +203,7 @@ These are targets to confirm on the reference machine, not guarantees.
 
 ## Sources
 
+- GSI landslide forecasting and susceptibility data, Ministry of Earth Sciences reply: https://moes.gov.in/sites/default/files/PIB2158420.pdf
+- EGU General Assembly 2025 abstract EGU25-4637, "Time stamped landslide inventory and its causal factors in Rudraprayag, India": https://meetingorganizer.copernicus.org/EGU25/EGU25-4637.html
 - The Hitavada, "16 killed in rain-related incidents as monsoon batters nation", 20 Jul 2026: https://www.thehitavada.com/Encyc/2026/7/20/16-killed-in-rain-related-incidents-16-as-monsoon-batters-nation.html
 - Medical Dialogues, "Uttarakhand: only 295 specialist doctors against 840 sanctioned posts, RTI reveals": https://medicaldialogues.in/state-news/uttrakhand/uttarakhand-only-295-specialist-doctors-against-840-sanctioned-posts-rti-reveals-180910

@@ -8,8 +8,8 @@ Confirm the official timeline on the hackathon portal. Whether a working prototy
 
 | Date | Milestone | Done when |
 |---|---|---|
-| Thu 22 Oct | **M0: Repo and docs** | Docs and scaffold pushed to GitHub |
-| Fri 23 Oct | **M1: Data audit** | Checklist in `docs/DATA.md` complete; corridor confirmed (ADR-006); draft idea text written |
+| Thu 22 Oct | **M0: Repo and docs** | Docs and scaffold pushed to GitHub. Docs written; push is the author's step. |
+| Thu 22 to Fri 23 Oct | **M1: Data audit** | Checklist in `docs/DATA.md` complete; corridor confirmed (ADR-006); idea text drafted. Status 22 Oct: desk audit done, audit scripts written and tested on synthetic data, idea draft written. Remaining: run the local audit on real files and confirm the corridor. |
 | Sat 24 Oct | **M2: Terrain and roads on screen** | Real terrain with road overlay renders at an acceptable frame rate |
 | Sun 25 Oct | **M3: Core engine** | Graph, routing, S1 landslide, isolation metrics, with tests; deterministic runs |
 | Mon 26 Oct | **M4: Tap-to-trigger and dashboard** | Tap a road, run S1, see metrics with units and tags, before/after toggle |
