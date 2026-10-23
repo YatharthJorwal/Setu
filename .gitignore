@@ -23,3 +23,6 @@ data/raw/*
 .idea/
 .vscode/
 *.log
+
+# web app: data copied from data/processed by scripts/sync-data.mjs
+web/public/data/

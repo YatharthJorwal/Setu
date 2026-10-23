@@ -46,28 +46,33 @@ If code and docs disagree, stop and resolve it. Either fix the code or update th
 
 ## Commands
 
-Pipeline audit tooling exists and works (run from the repo root). The web app and the build/validate steps do not exist yet. Update this section the moment they do, and do not invent others.
+Pipeline audit tooling exists and was run. The M2 build step and web app exist but have not been run by the author. Validation does not exist yet. Update this section the moment they do, and do not invent others.
 
 ```
 pipeline (exists):
   pip install -r pipeline/requirements.txt
-  python -m pipeline.fetch_osm --area rudraprayag
+  python -m pipeline.fetch_osm --area rudraprayag [--only roads health places buildings_count]
   python -m pipeline.fetch_dem --area rudraprayag
   python -m pipeline.audit --area rudraprayag [--skip-dem]
   python -m unittest discover -s pipeline/tests -t .
 
+pipeline build (exists, terrain step not yet run by the author):
+  python -m pipeline.build --area rudraprayag      # writes data/processed for the web app
+
+web (exists, not yet run by the author; run from web/):
+  npm install
+  npm run dev | build | test | lint | typecheck
+
 planned (not yet written):
-  web:       npm run dev | build | test | lint | typecheck
-  pipeline:  python -m pipeline.build --area rudraprayag
-             python -m pipeline.validate
+  python -m pipeline.validate
 ```
 
 ## Current status
 
 Pre-alpha. Docs, an empty web scaffold, and the data-audit scripts exist.
-Desk audit done (see `docs/DATA.md` section 6). Local audit on real files is the next step and has not been run.
+Desk audit and local audit run 1 done (see `docs/DATA.md` section 6). Rudraprayag corridor accepted (ADR-006).
 Pilot area: Rudraprayag corridor (proposed, confirm in `docs/DECISIONS.md` ADR-006).
-Next: run the local audit, confirm the corridor, then terrain render (M2).
+Next: run and fix M2 (terrain and roads on screen), re-fetch places if not done, curate facility tiers (ADR-008), obtain population data, then M3 (graph and landslide scenario).
 
 ## Definition of done (any change)
 

@@ -1,0 +1,790 @@
+{
+  "area": "rudraprayag",
+  "bbox_wsen": [
+    78.9,
+    30.25,
+    79.25,
+    30.68
+  ],
+  "roads": {
+    "ways": 804,
+    "length_km_by_class": {
+      "unclassified": 939.0,
+      "trunk": 187.6,
+      "track": 149.0,
+      "tertiary": 109.7,
+      "primary": 93.4,
+      "secondary": 39.5,
+      "residential": 21.3,
+      "service": 17.4,
+      "living_street": 0.4
+    },
+    "tag_coverage": {
+      "name": 0.016,
+      "ref": 0.182,
+      "surface": 0.049,
+      "maxspeed": 0.127,
+      "bridge": 0.185
+    },
+    "bridges": 149
+  },
+  "network_without_tracks": {
+    "nodes": 48411,
+    "edges": 48448,
+    "total_length_km": 1408.2,
+    "components": 7,
+    "main_component_km": 1329.3,
+    "main_component_share": 0.944,
+    "detached_fragments_over_min": [
+      {
+        "length_km": 23.34,
+        "centroid_lon": 78.88499,
+        "centroid_lat": 30.3079
+      },
+      {
+        "length_km": 21.56,
+        "centroid_lon": 78.89737,
+        "centroid_lat": 30.40173
+      },
+      {
+        "length_km": 19.5,
+        "centroid_lon": 78.92218,
+        "centroid_lat": 30.48743
+      },
+      {
+        "length_km": 5.88,
+        "centroid_lon": 78.89343,
+        "centroid_lat": 30.33342
+      },
+      {
+        "length_km": 4.51,
+        "centroid_lon": 79.07234,
+        "centroid_lat": 30.60146
+      },
+      {
+        "length_km": 4.12,
+        "centroid_lon": 78.89884,
+        "centroid_lat": 30.37452
+      }
+    ],
+    "detached_fragment_count": 6
+  },
+  "network_with_tracks": {
+    "nodes": 53013,
+    "edges": 53053,
+    "total_length_km": 1557.2,
+    "components": 12,
+    "main_component_km": 1488.2,
+    "main_component_share": 0.956,
+    "detached_fragments_over_min": [
+      {
+        "length_km": 29.18,
+        "centroid_lon": 78.88954,
+        "centroid_lat": 30.30765
+      },
+      {
+        "length_km": 19.79,
+        "centroid_lon": 78.92219,
+        "centroid_lat": 30.4875
+      },
+      {
+        "length_km": 10.93,
+        "centroid_lon": 78.97496,
+        "centroid_lat": 30.48636
+      },
+      {
+        "length_km": 5.88,
+        "centroid_lon": 78.89343,
+        "centroid_lat": 30.33342
+      },
+      {
+        "length_km": 2.15,
+        "centroid_lon": 79.16082,
+        "centroid_lat": 30.36972
+      },
+      {
+        "length_km": 0.4,
+        "centroid_lon": 79.07179,
+        "centroid_lat": 30.61391
+      }
+    ],
+    "detached_fragment_count": 6
+  },
+  "facilities": {
+    "stats": {
+      "count": 71,
+      "within_snap": 59,
+      "on_main_network": 57,
+      "snap_threshold_m": 300.0
+    },
+    "list": [
+      {
+        "name": "CHC Karanprayag",
+        "kind": "centre",
+        "lon": 79.21584,
+        "lat": 30.25992,
+        "dist_to_road_m": 31.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "Phata",
+        "kind": "centre",
+        "lon": 79.03878,
+        "lat": 30.57708,
+        "dist_to_road_m": 10.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "Augustmuni",
+        "kind": "centre",
+        "lon": 79.02276,
+        "lat": 30.39137,
+        "dist_to_road_m": 55.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "CHC Pokhari",
+        "kind": "centre",
+        "lon": 79.19743,
+        "lat": 30.34427,
+        "dist_to_road_m": 22.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "PHC Chopta",
+        "kind": "centre",
+        "lon": 79.04127,
+        "lat": 30.35164,
+        "dist_to_road_m": 20.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "APHC Gaucher",
+        "kind": "centre",
+        "lon": 79.14785,
+        "lat": 30.29624,
+        "dist_to_road_m": 67.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "Ukhimath Primary Health Centre",
+        "kind": "centre",
+        "lon": 79.09425,
+        "lat": 30.51892,
+        "dist_to_road_m": 33.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "District Hospital Rudraprayag",
+        "kind": "hospital",
+        "lon": 78.9815,
+        "lat": 30.28647,
+        "dist_to_road_m": 27.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "Government Hospital, Karnaprayag",
+        "kind": "hospital",
+        "lon": 79.21499,
+        "lat": 30.2603,
+        "dist_to_road_m": 52.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "Trauma Centre",
+        "kind": "hospital",
+        "lon": 79.21517,
+        "lat": 30.26326,
+        "dist_to_road_m": 24.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "ITBP Hospital",
+        "kind": "hospital",
+        "lon": 79.14518,
+        "lat": 30.28714,
+        "dist_to_road_m": 76.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "Semwal Clinic",
+        "kind": "clinic",
+        "lon": 79.21756,
+        "lat": 30.26022,
+        "dist_to_road_m": 8.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "Anandita Clinic",
+        "kind": "clinic",
+        "lon": 79.21632,
+        "lat": 30.2595,
+        "dist_to_road_m": 25.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "ECHS PolyClinic",
+        "kind": "clinic",
+        "lon": 79.24874,
+        "lat": 30.28336,
+        "dist_to_road_m": 17.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "D.R Memorial Ortho Physio Care",
+        "kind": "clinic",
+        "lon": 79.21854,
+        "lat": 30.25596,
+        "dist_to_road_m": 16.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "Jankalyan Hospital, Rudraprayag",
+        "kind": "hospital",
+        "lon": 78.98315,
+        "lat": 30.28353,
+        "dist_to_road_m": 6.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Kalimath",
+        "kind": "centre",
+        "lon": 79.08599,
+        "lat": 30.56034,
+        "dist_to_road_m": 15.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Jourasi",
+        "kind": "centre",
+        "lon": 79.20417,
+        "lat": 30.38672,
+        "dist_to_road_m": 9.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Haapla",
+        "kind": "centre",
+        "lon": 79.20653,
+        "lat": 30.41455,
+        "dist_to_road_m": 32.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Siran",
+        "kind": "centre",
+        "lon": 79.1804,
+        "lat": 30.26203,
+        "dist_to_road_m": 586.0,
+        "within_snap": false,
+        "on_main_network": false
+      },
+      {
+        "name": "SubCentre, Nauli",
+        "kind": "centre",
+        "lon": 79.22281,
+        "lat": 30.43381,
+        "dist_to_road_m": 406.0,
+        "within_snap": false,
+        "on_main_network": false
+      },
+      {
+        "name": "SubCentre, Udamanda",
+        "kind": "centre",
+        "lon": 79.19524,
+        "lat": 30.32157,
+        "dist_to_road_m": 23.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Mohankhal",
+        "kind": "centre",
+        "lon": 79.15604,
+        "lat": 30.37657,
+        "dist_to_road_m": 8.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Bamoth",
+        "kind": "centre",
+        "lon": 79.17372,
+        "lat": 30.27778,
+        "dist_to_road_m": 32.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Salna",
+        "kind": "centre",
+        "lon": 79.18905,
+        "lat": 30.38526,
+        "dist_to_road_m": 769.0,
+        "within_snap": false,
+        "on_main_network": false
+      },
+      {
+        "name": "SubCentre, Jasoli",
+        "kind": "centre",
+        "lon": 79.08333,
+        "lat": 30.26118,
+        "dist_to_road_m": 36.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Jaggi Bagwan",
+        "kind": "centre",
+        "lon": 79.10856,
+        "lat": 30.53838,
+        "dist_to_road_m": 383.0,
+        "within_snap": false,
+        "on_main_network": false
+      },
+      {
+        "name": "SubCentre, Maikoti",
+        "kind": "centre",
+        "lon": 78.99699,
+        "lat": 30.34107,
+        "dist_to_road_m": 126.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "Government Hospital, Pathalidhar",
+        "kind": "hospital",
+        "lon": 79.03191,
+        "lat": 30.41181,
+        "dist_to_road_m": 42.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Parkandi",
+        "kind": "centre",
+        "lon": 79.09302,
+        "lat": 30.48369,
+        "dist_to_road_m": 238.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "Government Hospital, Jakhal Bhardar",
+        "kind": "hospital",
+        "lon": 78.92717,
+        "lat": 30.34875,
+        "dist_to_road_m": 133.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Tulanga",
+        "kind": "centre",
+        "lon": 79.0438,
+        "lat": 30.50569,
+        "dist_to_road_m": 1095.0,
+        "within_snap": false,
+        "on_main_network": false
+      },
+      {
+        "name": "Government Hospital, Basukedar",
+        "kind": "hospital",
+        "lon": 79.05613,
+        "lat": 30.43922,
+        "dist_to_road_m": 76.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "Primary Health Centre, Bhiri",
+        "kind": "centre",
+        "lon": 79.07738,
+        "lat": 30.46609,
+        "dist_to_road_m": 67.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "Government Hospital, Makku Math",
+        "kind": "hospital",
+        "lon": 79.13629,
+        "lat": 30.48207,
+        "dist_to_road_m": 79.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Jawari",
+        "kind": "centre",
+        "lon": 78.98778,
+        "lat": 30.30623,
+        "dist_to_road_m": 159.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Timali",
+        "kind": "centre",
+        "lon": 78.91583,
+        "lat": 30.33194,
+        "dist_to_road_m": 485.0,
+        "within_snap": false,
+        "on_main_network": false
+      },
+      {
+        "name": "SubCentre, Randhar",
+        "kind": "centre",
+        "lon": 78.91223,
+        "lat": 30.46894,
+        "dist_to_road_m": 17.0,
+        "within_snap": true,
+        "on_main_network": false
+      },
+      {
+        "name": "SubCentre, Ghimtoli",
+        "kind": "centre",
+        "lon": 79.09151,
+        "lat": 30.35219,
+        "dist_to_road_m": 41.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Chopda",
+        "kind": "centre",
+        "lon": 79.05576,
+        "lat": 30.32404,
+        "dist_to_road_m": 37.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Semalta",
+        "kind": "centre",
+        "lon": 78.94611,
+        "lat": 30.32256,
+        "dist_to_road_m": 327.0,
+        "within_snap": false,
+        "on_main_network": false
+      },
+      {
+        "name": "SubCentre, Bakseer",
+        "kind": "centre",
+        "lon": 78.97933,
+        "lat": 30.48463,
+        "dist_to_road_m": 3364.0,
+        "within_snap": false,
+        "on_main_network": false
+      },
+      {
+        "name": "SubCentre, Bainoli",
+        "kind": "centre",
+        "lon": 78.91622,
+        "lat": 30.35995,
+        "dist_to_road_m": 15.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "Community Health Centre, Ratura",
+        "kind": "centre",
+        "lon": 79.03909,
+        "lat": 30.30811,
+        "dist_to_road_m": 16.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Chopda",
+        "kind": "centre",
+        "lon": 79.05935,
+        "lat": 30.32151,
+        "dist_to_road_m": 9.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Saterakhal",
+        "kind": "centre",
+        "lon": 79.00225,
+        "lat": 30.32231,
+        "dist_to_road_m": 62.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Daira",
+        "kind": "centre",
+        "lon": 79.16113,
+        "lat": 30.50991,
+        "dist_to_road_m": 10.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Durgadhar",
+        "kind": "centre",
+        "lon": 79.02785,
+        "lat": 30.34897,
+        "dist_to_road_m": 27.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "Primary Health Centre, Nagrasu",
+        "kind": "centre",
+        "lon": 79.10494,
+        "lat": 30.29937,
+        "dist_to_road_m": 17.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Rampur",
+        "kind": "centre",
+        "lon": 79.00998,
+        "lat": 30.61806,
+        "dist_to_road_m": 11.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Chaunra",
+        "kind": "centre",
+        "lon": 78.90166,
+        "lat": 30.41189,
+        "dist_to_road_m": 23.0,
+        "within_snap": true,
+        "on_main_network": false
+      },
+      {
+        "name": "SubCentre, Syur",
+        "kind": "centre",
+        "lon": 79.00185,
+        "lat": 30.44613,
+        "dist_to_road_m": 1608.0,
+        "within_snap": false,
+        "on_main_network": false
+      },
+      {
+        "name": "SubCentre, Machkandi",
+        "kind": "centre",
+        "lon": 79.14445,
+        "lat": 30.41471,
+        "dist_to_road_m": 15.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Malkoti",
+        "kind": "centre",
+        "lon": 79.13268,
+        "lat": 30.36658,
+        "dist_to_road_m": 896.0,
+        "within_snap": false,
+        "on_main_network": false
+      },
+      {
+        "name": "SubCentre, Tuneta",
+        "kind": "centre",
+        "lon": 78.92932,
+        "lat": 30.36312,
+        "dist_to_road_m": 187.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Kandali",
+        "kind": "centre",
+        "lon": 78.96938,
+        "lat": 30.37603,
+        "dist_to_road_m": 11.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Paldwari",
+        "kind": "centre",
+        "lon": 79.13083,
+        "lat": 30.48032,
+        "dist_to_road_m": 64.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Mansoona",
+        "kind": "centre",
+        "lon": 79.12542,
+        "lat": 30.54786,
+        "dist_to_road_m": 19.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Kurjhan",
+        "kind": "centre",
+        "lon": 79.07245,
+        "lat": 30.32224,
+        "dist_to_road_m": 365.0,
+        "within_snap": false,
+        "on_main_network": false
+      },
+      {
+        "name": "SubCentre, Sumari Bhardar",
+        "kind": "centre",
+        "lon": 78.97146,
+        "lat": 30.34764,
+        "dist_to_road_m": 231.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "Primary Health Centre, Guptkashi",
+        "kind": "centre",
+        "lon": 79.08226,
+        "lat": 30.52842,
+        "dist_to_road_m": 60.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Saunda",
+        "kind": "centre",
+        "lon": 78.91596,
+        "lat": 30.34602,
+        "dist_to_road_m": 6.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Kandara",
+        "kind": "centre",
+        "lon": 79.0838,
+        "lat": 30.43809,
+        "dist_to_road_m": 6.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Lwani",
+        "kind": "centre",
+        "lon": 79.07016,
+        "lat": 30.50093,
+        "dist_to_road_m": 36.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Kothgi",
+        "kind": "centre",
+        "lon": 79.08782,
+        "lat": 30.30238,
+        "dist_to_road_m": 122.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Saura",
+        "kind": "centre",
+        "lon": 78.92216,
+        "lat": 30.31271,
+        "dist_to_road_m": 101.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Uchola",
+        "kind": "centre",
+        "lon": 79.01004,
+        "lat": 30.47069,
+        "dist_to_road_m": 1274.0,
+        "within_snap": false,
+        "on_main_network": false
+      },
+      {
+        "name": "SubCentre, Ransi",
+        "kind": "centre",
+        "lon": 79.14201,
+        "lat": 30.58792,
+        "dist_to_road_m": 55.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Sidhsaur",
+        "kind": "centre",
+        "lon": 78.96305,
+        "lat": 30.39847,
+        "dist_to_road_m": 36.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Tilwara",
+        "kind": "centre",
+        "lon": 78.97618,
+        "lat": 30.34463,
+        "dist_to_road_m": 34.0,
+        "within_snap": true,
+        "on_main_network": true
+      },
+      {
+        "name": "SubCentre, Dashjula Kandai",
+        "kind": "centre",
+        "lon": 79.11535,
+        "lat": 30.33617,
+        "dist_to_road_m": 156.0,
+        "within_snap": true,
+        "on_main_network": true
+      }
+    ]
+  },
+  "places": {
+    "stats_without_tracks": {
+      "count": 0,
+      "within_snap": 0,
+      "on_main_network": 0,
+      "snap_threshold_m": 500.0
+    },
+    "stats_with_tracks": {
+      "count": 0,
+      "within_snap": 0,
+      "on_main_network": 0,
+      "snap_threshold_m": 500.0
+    },
+    "by_kind": {},
+    "unconnected": []
+  },
+  "buildings_total": 3070,
+  "dem": {
+    "status": "ok",
+    "tiles_used": [
+      "Copernicus_DSM_COG_10_N30_00_E078_00_DEM.tif",
+      "Copernicus_DSM_COG_10_N30_00_E079_00_DEM.tif"
+    ],
+    "samples_in_bbox": 1948932,
+    "void_share": 0.0,
+    "elevation_min_m": 594.0,
+    "elevation_max_m": 4655.0
+  }
+}

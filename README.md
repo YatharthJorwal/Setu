@@ -47,7 +47,19 @@ web/         the React app (sim core in web/src/sim)
 
 ## Running it
 
-Not yet. Setup and run instructions will be added when the scaffold lands. Environment variables will be documented here; secrets are never committed.
+Needs Python 3.11+ and Node 20+. From the repo root:
+
+```
+pip install -r pipeline/requirements.txt
+python -m pipeline.fetch_osm --area rudraprayag
+python -m pipeline.fetch_dem --area rudraprayag
+python -m pipeline.build --area rudraprayag
+cd web
+npm install
+npm run dev
+```
+
+Then open the address Vite prints (usually http://localhost:5173). Secrets are never committed.
 
 ## Data and attribution
 

@@ -81,7 +81,7 @@ Every scenario run is a pure function of `(corridor data, scenario params, seed)
 
 ## 6. Metrics (precise definitions)
 
-Let `F_open` be the set of health facilities reachable in the surviving network, and `T(v, f)` the shortest travel time from village `v` to facility `f`.
+Facilities count as destinations by **tier** (see `docs/DATA.md` and ADR-008). Metrics are reported separately for two target sets: `primary` (PHC and above) and `emergency` (CHC, trauma centre, and district hospital only). Sub-centres, private clinics, and restricted-access facilities (for example ITBP and ECHS) are never counted as emergency destinations. Let `F_open` be the set of facilities of the target tier reachable in the surviving network, and `T(v, f)` the shortest travel time from village `v` to facility `f`.
 
 | Metric | Definition | Unit |
 |---|---|---|
@@ -96,7 +96,7 @@ Let `F_open` be the set of health facilities reachable in the surviving network,
 
 `T_golden` default is 60 minutes. It is an assumption, labelled in the UI, and user-adjustable.
 
-Village population: Census or building-count estimate, whichever the data audit confirms. If estimated, the UI states the method and persons-per-household assumption.
+Village population: Census-linked or PMGSY habitation data. OSM buildings are too sparse in the corridor to estimate population (2026-10-22 audit), so there is no building-count fallback. If a village has no usable population figure, it is shown as "population unknown" and excluded from population totals, and the UI says so. Census figures date from 2011 and are labelled as such.
 
 Every metric shown in the UI carries a unit and either a data-source tag or an assumption tag.
 

@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "source": "Copernicus GLO-30 DEM, area-averaged to a coarse grid",
+  "west": 78.9,
+  "north": 30.68,
+  "east": 79.25,
+  "south": 30.250217435829406,
+  "cols": 320,
+  "rows": 454,
+  "cell_lon_deg": 0.0010937499999999823,
+  "cell_lat_deg": 0.0009466576303317057,
+  "cell_size_m": 104.9,
+  "elevation_min_m": 595.6,
+  "elevation_max_m": 4631.7,
+  "voids_filled": 0,
+  "encoding": "float32 little-endian, row-major, north to south, metres, sample at cell centre",
+  "file": "terrain.f32"
+}

@@ -82,8 +82,9 @@ The validator fails the build if: the graph is disconnected in unexpected ways, 
 ## 5. Coordinate systems and units
 
 - Stored and exchanged geometry: WGS84 (EPSG:4326), longitude and latitude, elevation in metres.
-- Simulation and rendering space: a local projected system in metres, set per corridor. The Rudraprayag corridor sits in UTM zone 44N (EPSG:32644). The zone is configured per area, not hard-coded.
-- Conversion happens at two boundaries only: pipeline output (already projected for the graph) and `lib/geo`.
+- Rendering space (ADR-009): a local flat-earth frame in metres centred on the corridor, built in `lib/geo.ts` from WGS84 degree lengths at the corridor's central latitude. East-west scale error across the corridor is about 0.2%, which is fine for display. Rendering coordinates are never used for measurement.
+- Simulation distances: geodesic (haversine) segment lengths computed in the pipeline when the routing graph is built (M3). The Rudraprayag corridor sits in UTM zone 44N (EPSG:32644) if a projected CRS is later needed. The zone is configured per area, not hard-coded.
+- Conversion from WGS84 to the rendering frame happens in `lib/geo` only.
 - Units in code are SI, with suffixes in names: `length_m`, `time_s`, `speed_kmh` where non-SI is unavoidable. Time in the sim is seconds from event start.
 
 ## 6. Simulation model (`web/src/sim`)

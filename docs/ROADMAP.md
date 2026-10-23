@@ -9,7 +9,7 @@ Confirm the official timeline on the hackathon portal. Whether a working prototy
 | Date | Milestone | Done when |
 |---|---|---|
 | Thu 22 Oct | **M0: Repo and docs** | Docs and scaffold pushed to GitHub. Docs written; push is the author's step. |
-| Thu 22 to Fri 23 Oct | **M1: Data audit** | Checklist in `docs/DATA.md` complete; corridor confirmed (ADR-006); idea text drafted. Status 22 Oct: desk audit done, audit scripts written and tested on synthetic data, idea draft written. Remaining: run the local audit on real files and confirm the corridor. |
+| Thu 22 to Fri 23 Oct | **M1: Data audit** | Checklist in `docs/DATA.md` complete; corridor confirmed (ADR-006); idea text drafted. Status 22 Oct: desk audit done; local audit run 1 done (DEM clean, roads 94% connected, 71 facilities; places query bug fixed, re-fetch pending). Remaining: re-fetch places, curate facility tiers, get population data, confirm road-fragment artifacts. |
 | Sat 24 Oct | **M2: Terrain and roads on screen** | Real terrain with road overlay renders at an acceptable frame rate |
 | Sun 25 Oct | **M3: Core engine** | Graph, routing, S1 landslide, isolation metrics, with tests; deterministic runs |
 | Mon 26 Oct | **M4: Tap-to-trigger and dashboard** | Tap a road, run S1, see metrics with units and tags, before/after toggle |
@@ -19,6 +19,13 @@ Confirm the official timeline on the hackathon portal. Whether a working prototy
 | Thu 29 Oct | **M7: Honesty layer and polish** | Assumptions and provenance panels; performance pass; report export |
 | Fri 30 Oct | **M8: Demo and write-up** | Demo video, README with screenshots, a bug bash |
 | Sat 31 Oct | Buffer | Nothing new. Fixes only. |
+
+## Status and known gaps (update as work lands)
+
+- **M2 (terrain and roads on screen):** code written 22 Oct (`pipeline/build.py`, `web/`). Pure logic is unit-tested; the React and three.js layer and `build_terrain` have not been run by the author. Not done until it runs on a real machine and looks right.
+- **RULES U2 gap:** in M2 road classes are separated by colour and brightness only (WebGL lines cannot vary in width). Road selection and labels arrive with M4.
+- **Lighting and camera defaults are guesses** until someone looks at the first render.
+- **Facility tiers** are name-based guesses until curated (ADR-008).
 
 ## Order of priority if time runs short
 

@@ -42,7 +42,7 @@ def queries(area: Area) -> dict[str, str]:
         ),
         "places": (
             f'{head}node["place"~"^(city|town|village|hamlet|suburb|isolated_dwelling)$"]({b});'
-            "out tags;"
+            "out body;"  # NOT 'out tags': that omits coordinates
         ),
         "buildings_count": f'{head}way["building"]({b});out count;',
     }
@@ -70,12 +70,16 @@ def run_query(query: str, retries: int = 4) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--area", default="rudraprayag")
+    parser.add_argument("--only", nargs="+", choices=sorted(queries(get_area("rudraprayag"))),
+                        help="fetch just these datasets (default: all)")
     args = parser.parse_args()
     area = get_area(args.area)
 
     out_dir = RAW / "osm"
     out_dir.mkdir(parents=True, exist_ok=True)
     for name, query in queries(area).items():
+        if args.only and name not in args.only:
+            continue
         dest = out_dir / f"{area.key}_{name}.json"
         print(f"{name}: querying Overpass ...")
         data = run_query(query)

@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -166,9 +167,11 @@ def points_on_network(
 ) -> tuple[dict, list[dict]]:
     """Snap items to the nearest road node; report how many are on the main network."""
     rows = []
+    no_coords = 0
     for it in items:
         pt = point_of(it)
         if pt is None:
+            no_coords += 1
             continue
         node, dist = net.nearest(*pt)
         comp = net.comp_of.get(node) if node else None
@@ -180,6 +183,7 @@ def points_on_network(
                 or it.get("tags", {}).get("healthcare", ""),
                 "lon": round(pt[0], 5),
                 "lat": round(pt[1], 5),
+                "tier_guess": guess_tier(it.get("tags", {})),
                 "dist_to_road_m": round(dist, 0) if math.isfinite(dist) else None,
                 "within_snap": dist <= snap_m,
                 "on_main_network": comp is not None and comp == net.main and dist <= snap_m,
@@ -188,11 +192,34 @@ def points_on_network(
     n = len(rows)
     stats = {
         "count": n,
+        "elements_without_coordinates": no_coords,  # nonzero means the fetch query is wrong
         "within_snap": sum(r["within_snap"] for r in rows),
         "on_main_network": sum(r["on_main_network"] for r in rows),
         "snap_threshold_m": snap_m,
     }
     return stats, rows
+
+
+def guess_tier(tags: dict) -> str:
+    """Best-effort health facility tier from OSM tags. A GUESS: curate by hand (RULES D2)."""
+    name = tags.get("name", "").lower()
+    if re.search(r"\b(itbp|echs)\b", name):
+        return "restricted_access"
+    if "district hospital" in name or "district women" in name:
+        return "district_hospital"
+    if "trauma" in name:
+        return "trauma_centre"
+    if re.search(r"\bchc\b|community health", name):
+        return "chc"
+    if re.search(r"\baphc\b|\bphc\b|primary health", name):
+        return "phc"
+    if re.search(r"sub\s*-?\s*centre|subcenter", name):
+        return "sub_centre"
+    if "hospital" in name or tags.get("amenity") == "hospital":
+        return "hospital_other"
+    if tags.get("amenity") in ("clinic", "doctors"):
+        return "clinic_other"
+    return "unknown"
 
 
 def dem_stats(area: Area) -> dict:
@@ -260,7 +287,12 @@ def run_audit(
         "roads": road_stats(ways),
         "network_without_tracks": strict.summary(),
         "network_with_tracks": loose.summary(),
-        "facilities": {"stats": fac_stats, "list": fac_rows},
+        "facilities": {
+            "stats": fac_stats,
+            "tier_guess_counts": dict(Counter(r["tier_guess"] for r in fac_rows)),
+            "unknown_tier_names": sorted({r["name"] or "(unnamed)" for r in fac_rows if r["tier_guess"] == "unknown"}),
+            "list": fac_rows,
+        },
         "places": {
             "stats_without_tracks": place_stats,
             "stats_with_tracks": place_stats_tracks,
@@ -288,7 +320,12 @@ def markdown_summary(rep: dict) -> str:
     pl = rep["places"]["stats_without_tracks"]
     plt_ = rep["places"]["stats_with_tracks"]
     dem = rep["dem"]
-    lines = [
+    warn = []
+    for label, st in (("facilities", fac), ("places", pl)):
+        if st["elements_without_coordinates"]:
+            warn.append(f"WARNING: {st['elements_without_coordinates']} {label} elements have no coordinates; "
+                        "re-fetch with pipeline.fetch_osm")
+    lines = warn + [
         f"### Audit run: {rep['area']}",
         f"- Roads: {rep['roads']['ways']} ways; length by class (km): {rep['roads']['length_km_by_class']}",
         f"- Tag coverage (share of ways): {rep['roads']['tag_coverage']}; bridges tagged: {rep['roads']['bridges']}",
@@ -299,6 +336,8 @@ def markdown_summary(rep: dict) -> str:
         f"{fac['on_main_network']} on the main network",
         f"- Places: {pl['count']} found; on main network (no tracks): {pl['on_main_network']}; "
         f"(with tracks): {plt_['on_main_network']}",
+        f"- Facility tier guesses (name-based, curate by hand): {rep['facilities']['tier_guess_counts']}; "
+        f"unknown: {rep['facilities']['unknown_tier_names']}",
         f"- Buildings in OSM: {rep['buildings_total']}",
         f"- DEM: {dem}",
     ]

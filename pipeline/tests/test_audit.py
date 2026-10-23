@@ -5,7 +5,7 @@ Run from the repo root:  python -m unittest discover -s pipeline/tests -t .
 
 import unittest
 
-from pipeline.audit import Network, build_graph, haversine_m, point_of, run_audit
+from pipeline.audit import Network, build_graph, guess_tier, haversine_m, point_of, run_audit
 from pipeline.config import Area
 from pipeline.fetch_dem import tile_name, tile_names
 
@@ -77,6 +77,30 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(rep["roads"]["bridges"], 1)
         names = {p["name"] for p in rep["places"]["unconnected"]}
         self.assertEqual(names, {"OnIsland", "Nowhere"})
+
+    def test_elements_without_coordinates_are_flagged(self):
+        places = {"elements": [{"type": "node", "id": 1, "tags": {"place": "village", "name": "NoCoords"}}]}
+        rep = run_audit(AREA, {"elements": [MAIN]}, {"elements": []}, places, {"elements": []}, with_dem=False)
+        self.assertEqual(rep["places"]["stats_without_tracks"]["count"], 0)
+        self.assertEqual(rep["places"]["stats_without_tracks"]["elements_without_coordinates"], 1)
+
+    def test_guess_tier(self):
+        cases = {
+            "District Hospital Rudraprayag": "district_hospital",
+            "CHC Karanprayag": "chc",
+            "Community Health Centre, Ratura": "chc",
+            "Ukhimath Primary Health Centre": "phc",
+            "APHC Gaucher": "phc",
+            "SubCentre, Kalimath": "sub_centre",
+            "Trauma Centre": "trauma_centre",
+            "ITBP Hospital": "restricted_access",
+            "ECHS PolyClinic": "restricted_access",
+            "Government Hospital, Basukedar": "hospital_other",
+            "Augustmuni": "unknown",
+        }
+        for name, tier in cases.items():
+            self.assertEqual(guess_tier({"name": name}), tier, name)
+        self.assertEqual(guess_tier({"name": "Semwal Clinic", "amenity": "clinic"}), "clinic_other")
 
     def test_empty_inputs_do_not_crash(self):
         rep = run_audit(AREA, {"elements": []}, {"elements": []}, {"elements": []}, {"elements": []}, with_dem=False)
