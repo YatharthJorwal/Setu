@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { t } from './lib/i18n';
 import { Scene } from './render/Scene';
 import { useSceneStore } from './state/store';
+import { Dashboard } from './ui/Dashboard';
 import { ErrorBoundary } from './ui/ErrorBoundary';
 import { Panel } from './ui/Panel';
 
@@ -27,6 +28,7 @@ export default function App() {
       <Panel />
       <main className="stage">
         <Stage />
+        <Dashboard />
       </main>
     </div>
   );

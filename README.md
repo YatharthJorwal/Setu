@@ -14,7 +14,7 @@ Built on real terrain and real roads for a valley corridor in Uttarakhand. Tap a
 - Let you trigger a scenario by tapping the map: a landslide on a road segment (v1); a flash flood at a point (stretch)
 - Simulate people and ambulances moving across the surviving road network
 - Compute, per village: access time to the nearest working clinic, whether it is isolated, how long, and how many people are affected
-- Show a before/after comparison and a consequences dashboard
+- Show a before/after comparison, a timeline, and a consequences dashboard
 - Generate a plain-language situation brief from the computed numbers (an LLM narrates; it never computes)
 - Show every dataset, licence, and modelled assumption in-app
 
@@ -54,12 +54,15 @@ pip install -r pipeline/requirements.txt
 python -m pipeline.fetch_osm --area rudraprayag
 python -m pipeline.fetch_dem --area rudraprayag
 python -m pipeline.build --area rudraprayag
+python -m pipeline.build_graph --area rudraprayag
 cd web
 npm install
 npm run dev
 ```
 
 Then open the address Vite prints (usually http://localhost:5173). Secrets are never committed.
+
+On Windows, `run.bat` does all of this in one step (installing packages, fetching and building data if missing, then starting the app). `run.bat help` lists the other commands.
 
 ## Data and attribution
 

@@ -3,14 +3,13 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useRef } from 'react
 import { BufferAttribute, BufferGeometry, Object3D, type InstancedMesh, type Mesh } from 'three';
 import { toWorldXZ } from '../lib/geo';
 import { FACILITY_COLORS, PLACE_COLOR } from '../lib/palette';
+import { scaleForDistance as scaleFor } from '../lib/view';
 import { isEmergencyTier } from '../lib/tiers';
 import { worldHeight } from '../lib/terrain';
 import type { Facility } from '../lib/types';
 import { useSceneStore } from '../state/store';
 
 const MARKER_LIFT = 60;
-/** Markers grow with camera distance so they stay visible when zoomed out. */
-const scaleFor = (distance: number): number => Math.min(10, Math.max(1, distance / 15000));
 
 function useWorldPositions(items: Facility[]): Array<[number, number, number]> {
   const assets = useSceneStore((s) => s.assets);

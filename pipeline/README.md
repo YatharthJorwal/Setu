@@ -33,6 +33,21 @@ python -m unittest discover -s pipeline/tests -t .
 
 These run offline on a small synthetic corridor.
 
+## Build
+
+```
+python -m pipeline.build --area rudraprayag         # terrain, roads, facility and place markers for the viewer
+python -m pipeline.build_graph --area rudraprayag   # routing graph for the simulation (needs the build above first)
+```
+
+## Facility tiers (review sheet)
+
+```
+python -m pipeline.build_graph --area rudraprayag --write-tier-template
+```
+
+Writes `pipeline/patches/facility_tiers.csv`: one row per facility with a name-based `tier_guess`. Fill the `tier` column where the guess is wrong or blank (allowed values are printed by the command), save, then run `build_graph` again. Re-running the template command keeps your edits. A typo in `tier` stops the build with the line number.
+
 ## Not yet written
 
-`pipeline.build` (produce `data/processed/` artifacts) and `pipeline.validate`. See `docs/DATA.md` for schemas.
+`pipeline.validate`. See `docs/DATA.md` for schemas.

@@ -78,3 +78,25 @@ summary { cursor: pointer; color: var(--muted); }
   .panel { order: 2; border-right: none; border-top: 1px solid var(--panel-border); }
   .stage { order: 1; }
 }
+
+.spaced { margin-top: 14px; }
+.warn { color: var(--assumption); }
+.group { border: 1px solid var(--panel-border); border-radius: 8px; padding: 6px 10px 8px; margin: 8px 0; }
+.group legend { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 0 6px; }
+.group.inline { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.error p, p.error { margin: 0 0 4px; }
+
+.dashboard {
+  position: absolute; top: 12px; right: 12px; width: 340px; max-height: calc(100% - 24px); overflow-y: auto;
+  background: rgba(21, 27, 33, 0.94); border: 1px solid var(--panel-border); border-radius: 10px; padding: 12px 14px;
+  backdrop-filter: blur(6px);
+}
+.metrics { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 6px 0 8px; }
+.metrics th, .metrics td { padding: 5px 4px; border-bottom: 1px solid #1f2830; text-align: right; vertical-align: top; }
+.metrics th[scope='row'], .metrics th[scope='col']:first-child { text-align: left; font-weight: 500; }
+.metrics thead th { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+@media (max-width: 760px) {
+  .dashboard { position: static; width: auto; max-height: none; margin: 8px; }
+  .stage { overflow-y: auto; }
+}

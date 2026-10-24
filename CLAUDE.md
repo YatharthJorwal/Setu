@@ -46,7 +46,7 @@ If code and docs disagree, stop and resolve it. Either fix the code or update th
 
 ## Commands
 
-Pipeline audit tooling exists and was run. The M2 build step and web app exist but have not been run by the author. Validation does not exist yet. Update this section the moment they do, and do not invent others.
+Pipeline audit tooling exists and was run. The M2 build step and web app exist and render the terrain, roads, facilities and places (confirmed by screenshot 2026-10-24). Validation does not exist yet. Update this section the moment they do, and do not invent others.
 
 ```
 pipeline (exists):
@@ -56,10 +56,15 @@ pipeline (exists):
   python -m pipeline.audit --area rudraprayag [--skip-dem]
   python -m unittest discover -s pipeline/tests -t .
 
-pipeline build (exists, terrain step not yet run by the author):
-  python -m pipeline.build --area rudraprayag      # writes data/processed for the web app
+windows launcher (exists): run.bat | run.bat help | run.bat graph | run.bat tiers | run.bat test
+  graph = rebuild the road graph and print the real-data network report
+  tiers = write and open the facility tier review sheet
 
-web (exists, not yet run by the author; run from web/):
+pipeline build (exists, run successfully on the author's machine 2026-10-24):
+  python -m pipeline.build --area rudraprayag      # terrain, roads, markers for the web app
+  python -m pipeline.build_graph --area rudraprayag [--write-tier-template]   # routing graph + curated facility tiers
+
+web (exists, renders; run from web/):
   npm install
   npm run dev | build | test | lint | typecheck
 
@@ -72,7 +77,7 @@ planned (not yet written):
 Pre-alpha. Docs, an empty web scaffold, and the data-audit scripts exist.
 Desk audit and local audit run 1 done (see `docs/DATA.md` section 6). Rudraprayag corridor accepted (ADR-006).
 Pilot area: Rudraprayag corridor (proposed, confirm in `docs/DECISIONS.md` ADR-006).
-Next: run and fix M2 (terrain and roads on screen), re-fetch places if not done, curate facility tiers (ADR-008), obtain population data, then M3 (graph and landslide scenario).
+M3 ran on the real corridor 2026-10-24 (1,306 road segments, 789 places, 71 facilities; closing the first NH107 segment out of Rudraprayag cuts off 142 places from emergency care). M4 code written the same day (click a road, severity, dashboard, before/after, timeline); not yet run by the author. Next: run and fix M4, review the facility tier sheet (ADR-008), then M5 agents.
 
 ## Definition of done (any change)
 

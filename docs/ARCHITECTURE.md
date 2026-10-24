@@ -63,7 +63,7 @@ Import rules (enforced by lint):
 
 - `sim/` imports from `lib/` only. It must not import `react`, `three`, `@react-three/*`, or reference `window`/`document`.
 - `render/` and `ui/` import from `state/` and `lib/`, never directly from `sim/` internals. They get results via the store.
-- `state/` is the only module that talks to the worker.
+- `state/` is the only module that talks to the worker, and the only one that imports `sim/`. It re-exports what the UI and the 3D layer need through `state/sim-api.ts`, so everything else imports the simulation through that one gateway.
 
 ## 4. Data artifacts (produced by `pipeline/`)
 
@@ -117,6 +117,8 @@ An event is a list of timed edge mutations: `{ edge_id, t_close_s, t_reopen_s | 
 `run(inputs, seed)` is reproducible. Results are serialisable as a "run record" (inputs, seed, version) so a scenario can be replayed or exported.
 
 ## 7. Worker protocol
+
+**Status (ADR-010):** in M3 and M4 the simulation runs on the main thread, because one scenario run takes milliseconds on this graph. The protocol below becomes real in M5 when moving agents arrive and per-frame work could block the UI. `sim/` is already free of DOM and rendering imports, so moving it into a worker is a wrapper, not a rewrite.
 
 The sim runs in a Web Worker so the UI never blocks.
 

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { useSceneStore } from '../state/store';
 import { FacilityMarkers, Places, SelectedRing } from './Markers';
 import { Roads } from './Roads';
+import { ScenarioOverlay } from './Scenario';
 import { Terrain } from './Terrain';
 
 function usePrefersReducedMotion(): boolean {
@@ -60,6 +61,7 @@ export function Scene() {
       {layers.facilities && <FacilityMarkers />}
       {layers.facilities && <SelectedRing />}
       {layers.places && <Places />}
+      <ScenarioOverlay />
       <Controls />
     </Canvas>
   );

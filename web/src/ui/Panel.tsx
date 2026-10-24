@@ -2,10 +2,8 @@ import { t } from '../lib/i18n';
 import { tierLabel } from '../lib/tiers';
 import { FACILITY_COLORS, PLACE_COLOR, ROAD_COLORS } from '../lib/palette';
 import { useSceneStore, type LayerKey } from '../state/store';
-
-function Tag({ kind }: { kind: 'data' | 'assumption' }) {
-  return <span className={`tag tag-${kind}`}>{t(kind === 'data' ? 'data.tag.data' : 'data.tag.assumption')}</span>;
-}
+import { ScenarioPanel } from './ScenarioPanel';
+import { Tag } from './Tag';
 
 function LayerToggle({ layer, label }: { layer: LayerKey; label: string }) {
   const on = useSceneStore((s) => s.layers[layer]);
@@ -59,6 +57,8 @@ export function Panel() {
             <LayerToggle layer="facilities" label={t('layers.facilities')} />
             {hasPlaces && <LayerToggle layer="places" label={t('layers.places')} />}
           </section>
+
+          <ScenarioPanel />
 
           <section>
             <h2>{t('view.title')}</h2>

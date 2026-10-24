@@ -82,3 +82,30 @@ Context: M2 needs terrain and roads on screen quickly. A projected CRS would nee
 Decision: The web app converts WGS84 to a local metre frame (`web/src/lib/geo.ts`) for rendering only. Simulation lengths come from geodesic lengths computed in the pipeline. This amends the earlier wording in ARCHITECTURE section 5.
 Dependencies added to `web/` (RULES C9): react and react-dom (UI); three (rendering); @react-three/fiber (declarative three.js in React); @react-three/drei (OrbitControls only; revisit if it grows); zustand (state). Dev: typescript, vite, @vitejs/plugin-react, vitest, eslint with typescript-eslint, and type packages. Versions are caret ranges of releases at least several months old at the time of writing.
 Consequences: No pyproj dependency. If a projected CRS is needed later (for example for area calculations), add it in a new ADR.
+
+## ADR-010: Routing graph rules and simulation scope for M3
+Date: 2026-10-24
+Status: Accepted
+Context: M3 needs a graph the simulation can route on, built from OSM data that is patchy in the hills, and a clear rule for what counts as an event effect.
+Decision:
+- Roads are undirected and drivable only; tracks are excluded. One-way tags are ignored.
+- Ways are clipped to the terrain mesh box, like the viewer. Chains of degree-2 vertices collapse into edges, which break where class or bridge flag changes and at snapped vertices.
+- Villages snap to the nearest road vertex within 500 m, facilities within 300 m. Snapping is to vertices, not segments, which is acceptable because OSM roads here are densely digitised (about 30 m between vertices in the audit); revisit if a long straight segment causes a miss.
+- Places counted: city, town, village, hamlet, isolated dwelling. Suburbs are excluded as neighbourhoods inside towns.
+- Travel time uses an assumed average speed per road class (`web/src/sim/assumptions.ts`). Slope is not modelled yet.
+- Event effects are measured against each place's own baseline. Unconnected places and places with no baseline route are reported separately (SPEC section 6).
+- Scenario runs happen on the main thread until agents arrive in M5 (see ARCHITECTURE section 7).
+Known limitation: roads and facilities outside the mesh box are not in the graph, so places near the box edge can look more isolated or more delayed than they are. Show this in the data notes; widen the fetch box if it matters.
+Consequences: Fast, testable, explainable runs. Several modelled values (speeds, clearance times) are assumptions and are shown as such. Results near the box edge need care.
+
+## ADR-011: Interaction model for scenario S1 (M4)
+Date: 2026-10-24
+Status: Accepted
+Context: The demo needs a fast, obvious way to trigger a landslide and read its consequences, without hidden modes or dead controls.
+Decision:
+- A road is chosen by clicking the terrain: the click's world point is matched to the nearest road segment within a tolerance that grows with camera distance (about 1.2% of the distance, at least 150 m). Drags that rotate the view are ignored. Terrain is raycast only on click, never on pointer move, so the 245,000-triangle mesh does not slow hovering.
+- Results recompute on every change (segment, severity, threshold). A run takes milliseconds, so there is no Run button.
+- The map shows rings for places cut off and cones for places the event newly pushed over the delay threshold. Places already beyond the threshold before the event are not marked, because the event did not cause that.
+- The timeline steps through the run's snapshots (the moment of the slide, then each reopening). The before/after switch changes the map and, in the table, the figures are always shown side by side.
+- The "most critical roads" shortcuts list the single worst segment of each named road, so one long highway does not fill the list.
+Consequences: Easy to demo and test. Picking depends on the draped road lines and the nearest-segment search; a click far from any road does nothing except show a hint.

@@ -25,35 +25,31 @@ Status key: **DESK-VERIFIED** = a source confirms the dataset exists and states 
 
 All geometry in WGS84 (EPSG:4326) unless stated. The graph is also provided in the corridor's projected CRS in metres.
 
-### `graph.json`
+### `graph.json` (M3, written by `python -m pipeline.build_graph`)
+
+The routing graph for the simulation. Also carries the villages and facilities, already snapped to it. This replaces the earlier plan for separate `villages.json` and `facilities.json` files for routing purposes.
 
 ```
 {
-  crs: { geographic: "EPSG:4326", projected: "EPSG:32644" },
-  bounds: { west, south, east, north },
-  nodes: [ { id, lon, lat, x_m, y_m, elevation_m, kind: "junction" | "village_access" | "facility_access" } ],
+  version, classes: [ "trunk", "primary", ... ],
+  nodes: [ [lon, lat], ... ],                       // index = node id
   edges: [ {
-    id, from, to,
-    length_m,
-    road_class,            // e.g. national_highway | state_highway | district_road | village_road | track
-    bridge: boolean,
-    geometry: [ [lon, lat, elevation_m], ... ],
-    source: "osm" | "patch"
-  } ]
+    a, b,                                           // node ids; undirected
+    len,                                            // metres, geodesic, along the full road
+    c,                                              // index into classes
+    br,                                             // 1 if tagged as a bridge
+    p: [ lon, lat, lon, lat, ... ],                 // simplified geometry for drawing only
+    n                                               // name or ref, may be empty
+  } ],
+  places: [ { id, name, kind, lon, lat, node, snap_m } ],            // node is null if no road within 500 m
+  facilities: [ { id, name, kind, lon, lat, node, snap_m, tier, tier_source } ],  // node null beyond 300 m
+  stats: { ... }                                    // build summary
 }
 ```
 
-### `villages.json`
+Rules that shape it (ADR-010): drivable roads only (tracks excluded); clipped to the terrain mesh box; chains of degree-2 vertices collapse into one edge, which also breaks where class or bridge changes and at any vertex a village or facility snaps to; snapping is to the nearest road vertex, not the nearest point on a segment; suburbs are not counted as places; `population` is not present yet.
 
-```
-[ { id, name, lon, lat, access_node, population, population_method: "census" | "estimated", population_note } ]
-```
-
-### `facilities.json`
-
-```
-[ { id, name, tier: "phc" | "chc" | "district_hospital" | "other", lon, lat, access_node, source } ]
-```
+Facility tiers: `tier_source` is `curated` when the row came from `pipeline/patches/facility_tiers.csv`, otherwise `guess` (name-based, ADR-008). Run `python -m pipeline.build_graph --write-tier-template` to create or refresh that sheet; edits are preserved on refresh.
 
 ### `provenance.json`
 

@@ -94,6 +94,14 @@ Facilities count as destinations by **tier** (see `docs/DATA.md` and ADR-008). M
 | `clearance_time` | estimated time until the blocked segment reopens | hours |
 | `isolation_duration(v)` | clearance time of the last blocked segment on which `v` still depends, along its best-case path | hours |
 
+**Event attribution (implemented in M3).** Metrics describe what the event changes, so three kinds of place are reported separately and never blamed on the event:
+
+- `unconnected`: the place could not be attached to any road within the snap distance (a data gap).
+- `no_baseline`: the place has no route to any destination even before the event (a data gap or a disconnected piece of network).
+- Everything else is judged against its own "before": `isolated` means reachable before and unreachable after; `delayed` means reachable but beyond the threshold after; `newly_delayed` is delayed after and within the threshold before.
+
+`population_isolated` and `population_delayed` sum only places with a known population, and the result reports what share of isolated places that covers (`known_share_isolated`). While no population data is loaded the share is zero and the UI must say "population unknown" rather than show zero.
+
 `T_golden` default is 60 minutes. It is an assumption, labelled in the UI, and user-adjustable.
 
 Village population: Census-linked or PMGSY habitation data. OSM buildings are too sparse in the corridor to estimate population (2026-10-22 audit), so there is no building-count fallback. If a village has no usable population figure, it is shown as "population unknown" and excluded from population totals, and the UI says so. Census figures date from 2011 and are labelled as such.

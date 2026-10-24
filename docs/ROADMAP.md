@@ -22,7 +22,10 @@ Confirm the official timeline on the hackathon portal. Whether a working prototy
 
 ## Status and known gaps (update as work lands)
 
-- **M2 (terrain and roads on screen):** code written 22 Oct (`pipeline/build.py`, `web/`). Pure logic is unit-tested; the React and three.js layer and `build_terrain` have not been run by the author. Not done until it runs on a real machine and looks right.
+- **M2 (terrain and roads on screen): DONE 24 Oct.** Confirmed by screenshot of the running app: real terrain, draped roads, facility markers and villages. Still to tune: village dots are dense, minor roads are thin.
+- **M3 (core engine): code written 24 Oct** (`pipeline/build_graph.py`, `web/src/sim/`). Pure logic is unit-tested (38 pipeline and 40 web tests, run outside the real toolchain for the web side). Not done until `run.bat graph` runs on the real corridor and the numbers look sensible.
+- **M4 (tap a road, dashboard, before/after): code written 24 Oct** (`render/Scenario.tsx`, `ui/ScenarioPanel.tsx`, `ui/Dashboard.tsx`, `state/store.ts`). Logic is unit-tested (road picking, draping, simulation); the React and three.js parts have not been run by the author. Not done until it works on a real machine.
+- **Open data tasks:** review the facility tier sheet (`run.bat tiers`), which moves the emergency access numbers a lot; obtain village population; check whether the 26 places with no route are clipped-edge artifacts.
 - **RULES U2 gap:** in M2 road classes are separated by colour and brightness only (WebGL lines cannot vary in width). Road selection and labels arrive with M4.
 - **Lighting and camera defaults are guesses** until someone looks at the first render.
 - **Facility tiers** are name-based guesses until curated (ADR-008).
