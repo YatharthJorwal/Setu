@@ -139,6 +139,8 @@ A new `run` cancels the previous one (match on run id). Agent positions are sent
 - **Roads:** line geometry draped on the terrain by sampling heights. Closed segments change style and animate once on closure.
 - **Villages and facilities:** instanced markers with labels via screen-space projection, decluttered at distance.
 - **Agents:** instanced meshes, updated from the latest `frame` buffer at a fixed rate.
+- **Markers:** facility pins, village dots and scenario markers keep a constant size on screen at any zoom (sized by world units per pixel at the orbit point), so they stay small and never swell into each other. Minor facilities appear only when the camera is close. Markers ease in over a few hundred milliseconds when a scenario runs, and not at all when the person prefers reduced motion.
+- **Ground block:** the terrain sits on a solid block. Four walls follow the terrain's edge profile down to a flat base, drawn with a layered soil-and-stone texture whose bands are measured as depth below the surface. The base and walls are decoration; nothing measures against them.
 - **Camera:** orbit controls with constrained pitch, zoom limits, and a reset control.
 - **Picking:** raycast for terrain points; for road selection, snap to the nearest edge within a pixel tolerance using a spatial index built from the graph.
 - **Budget:** see SPEC section 10. Measure on the reference machine before adding any visual effect.

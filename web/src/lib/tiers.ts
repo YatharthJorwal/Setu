@@ -7,6 +7,13 @@ export function isEmergencyTier(tier: string): boolean {
   return EMERGENCY.has(tier);
 }
 
+/** Primary-care tiers that are not emergency destinations: drawn as ordinary facility markers. */
+const PRIMARY_ONLY = new Set(['phc', 'hospital_other']);
+
+export function isPrimaryTier(tier: string): boolean {
+  return PRIMARY_ONLY.has(tier);
+}
+
 export function tierLabel(tier: string): string {
   switch (tier) {
     case 'district_hospital':

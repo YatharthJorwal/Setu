@@ -4,6 +4,9 @@ import { Scene } from './render/Scene';
 import { useSceneStore } from './state/store';
 import { Dashboard } from './ui/Dashboard';
 import { ErrorBoundary } from './ui/ErrorBoundary';
+import { FacilityCard } from './ui/FacilityCard';
+import { Legend } from './ui/Legend';
+import { MapToolbar } from './ui/MapToolbar';
 import { Panel } from './ui/Panel';
 
 function Stage() {
@@ -14,6 +17,22 @@ function Stage() {
     <ErrorBoundary>
       <Scene />
     </ErrorBoundary>
+  );
+}
+
+/** Everything that floats over the map. Hidden until the map data has loaded. */
+function MapOverlays() {
+  const ready = useSceneStore((s) => s.status === 'ready');
+  if (!ready) return null;
+  return (
+    <>
+      <MapToolbar />
+      <Dashboard />
+      <div className="overlay-bl">
+        <FacilityCard />
+        <Legend />
+      </div>
+    </>
   );
 }
 
@@ -28,7 +47,7 @@ export default function App() {
       <Panel />
       <main className="stage">
         <Stage />
-        <Dashboard />
+        <MapOverlays />
       </main>
     </div>
   );

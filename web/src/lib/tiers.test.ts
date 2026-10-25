@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isEmergencyTier, tierLabel } from './tiers';
+import { isEmergencyTier, isPrimaryTier, tierLabel } from './tiers';
 
 describe('tiers', () => {
   it('counts only CHC, trauma centre and district hospital as emergency', () => {
@@ -7,6 +7,13 @@ describe('tiers', () => {
     for (const t of ['phc', 'sub_centre', 'clinic_other', 'restricted_access', 'hospital_other', 'unknown']) {
       expect(isEmergencyTier(t)).toBe(false);
     }
+  });
+
+  it('treats PHCs and other hospitals as primary-only, never emergency', () => {
+    expect(isPrimaryTier('phc')).toBe(true);
+    expect(isPrimaryTier('hospital_other')).toBe(true);
+    expect(isPrimaryTier('chc')).toBe(false);
+    expect(isPrimaryTier('sub_centre')).toBe(false);
   });
 
   it('labels unknown values as Unknown', () => {

@@ -109,3 +109,16 @@ Decision:
 - The timeline steps through the run's snapshots (the moment of the slide, then each reopening). The before/after switch changes the map and, in the table, the figures are always shown side by side.
 - The "most critical roads" shortcuts list the single worst segment of each named road, so one long highway does not fill the list.
 Consequences: Easy to demo and test. Picking depends on the draped road lines and the nearest-segment search; a click far from any road does nothing except show a hint.
+
+## ADR-012: Visual language, marker sizing and the ground block (design pass 1)
+Date: 2026-10-24
+Status: Accepted
+Context: The first interactive build drew scenario markers in world units that grew with camera distance, so 142 cut-off places merged into red smears, and the terrain was a bare sheet with no underside. The interface was a dense single column.
+Decision:
+- Every marker is sized in screen pixels (world units per pixel at the orbit point), so markers stay small and constant at any zoom. Facility markers are slim pins; cut-off places are thin rings, newly delayed places small cones, the closed road a slim post. Shape carries the meaning and colour backs it up.
+- Smaller facility pins appear only when zoomed in.
+- The terrain sits on a solid block with layered soil and stone on all four sides, built from the terrain's own edge profile (`lib/block.ts`).
+- Layout: controls in a left rail; layer switches, results, legend and facility details float over the map; data notes, sources and assumptions fold away. Results are three tiles (cut off, beyond the threshold, typical access) with the before value under each.
+- Motion is short and functional: cards rise in, numbers count to new values, markers ease in. All of it switches off under `prefers-reduced-motion`.
+- The legend draws each symbol as it appears on the map, and scenario symbols appear only while a scenario is running.
+Consequences: A calmer, more legible interface. Marker sizes are fixed pixel values chosen by eye and may need tuning on other screens.

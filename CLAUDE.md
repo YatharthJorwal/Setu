@@ -77,7 +77,7 @@ planned (not yet written):
 Pre-alpha. Docs, an empty web scaffold, and the data-audit scripts exist.
 Desk audit and local audit run 1 done (see `docs/DATA.md` section 6). Rudraprayag corridor accepted (ADR-006).
 Pilot area: Rudraprayag corridor (proposed, confirm in `docs/DECISIONS.md` ADR-006).
-M3 ran on the real corridor 2026-10-24 (1,306 road segments, 789 places, 71 facilities; closing the first NH107 segment out of Rudraprayag cuts off 142 places from emergency care). M4 code written the same day (click a road, severity, dashboard, before/after, timeline); not yet run by the author. Next: run and fix M4, review the facility tier sheet (ADR-008), then M5 agents.
+M3 ran on the real corridor 2026-10-24 (1,306 road segments, 789 places, 71 facilities; closing the first NH107 segment out of Rudraprayag cuts off 142 places from emergency care). M4 code written the same day (click a road, severity, dashboard, before/after, timeline); not yet run by the author. M4 ran on the real corridor (clicking roads, dashboard, before/after all worked in screenshots). Design pass 1 written (ADR-012). Next: look at it, review the facility tier sheet (ADR-008), then M5 agents.
 
 ## Definition of done (any change)
 

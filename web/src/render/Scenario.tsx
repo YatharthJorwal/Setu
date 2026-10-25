@@ -4,9 +4,10 @@ import { BufferAttribute, BufferGeometry, Object3D, type InstancedMesh, type Mes
 import { buildEdgeSegments, drapePoint } from '../lib/drape';
 import { STATE_COLORS } from '../lib/palette';
 import { polylineMidpoint } from '../lib/pick';
-import { scaleForDistance } from '../lib/view';
 import { activeMutations } from '../state/sim-api';
 import { useSceneStore } from '../state/store';
+import { useAppear } from './appear';
+import { unitPerPixel } from './camera';
 
 type Vec3 = [number, number, number];
 
@@ -25,16 +26,24 @@ function SegmentLines({ positions, color }: { positions: Float32Array; color: st
   );
 }
 
-/** Tall thin post so a closed road can be found from far away. */
-function Pin({ position }: { position: Vec3 }) {
+const PIN_HEIGHT_PX = 44;
+const PIN_WIDTH_PX = 1.4;
+
+/** A slim post at the closed road, the same height on screen at any zoom, so it can be found from afar. */
+function Pin({ position, appearKey }: { position: Vec3; appearKey: string }) {
   const ref = useRef<Mesh>(null);
-  useFrame(({ camera }) => {
-    const s = scaleForDistance(camera.position.length());
-    ref.current?.scale.set(s, 1, s);
+  const appear = useAppear(appearKey, 320);
+  useFrame((state) => {
+    const mesh = ref.current;
+    if (!mesh) return;
+    const unit = unitPerPixel(state);
+    const h = PIN_HEIGHT_PX * unit * appear.current;
+    mesh.scale.set(PIN_WIDTH_PX * unit, Math.max(h, 1e-3), PIN_WIDTH_PX * unit);
+    mesh.position.set(position[0], position[1] + h / 2, position[2]);
   });
   return (
-    <mesh ref={ref} position={[position[0], position[1] + 1500, position[2]]}>
-      <cylinderGeometry args={[40, 40, 3000, 8]} />
+    <mesh ref={ref}>
+      <cylinderGeometry args={[1, 1, 1, 6]} />
       <meshBasicMaterial color={STATE_COLORS.closed} />
     </mesh>
   );
@@ -44,45 +53,49 @@ interface MarkerProps {
   points: Vec3[];
   shape: 'ring' | 'cone';
   color: string;
-  size: number;
+  /** size in screen pixels */
+  px: number;
+  appearKey: string;
 }
 
-/** Rings mark places cut off; cones mark places newly delayed. Shape carries the meaning, colour backs it up. */
-function ScenarioMarkers({ points, shape, color, size }: MarkerProps) {
+/** Thin rings mark places cut off; small cones mark places newly delayed. Shape carries the meaning, colour backs it up. */
+function ScenarioMarkers({ points, shape, color, px, appearKey }: MarkerProps) {
   const ref = useRef<InstancedMesh>(null);
   const dummy = useMemo(() => new Object3D(), []);
-  const lastScale = useRef(0);
+  const lastUnit = useRef(0);
+  const appear = useAppear(appearKey);
 
   const apply = useCallback(
-    (scale: number) => {
+    (unit: number, grow: number) => {
       const mesh = ref.current;
       if (!mesh) return;
       points.forEach((p, i) => {
         dummy.position.set(p[0], p[1], p[2]);
         dummy.rotation.set(shape === 'ring' ? Math.PI / 2 : 0, 0, 0);
-        dummy.scale.setScalar(size * scale);
+        dummy.scale.setScalar(Math.max(px * unit * grow, 1e-3));
         dummy.updateMatrix();
         mesh.setMatrixAt(i, dummy.matrix);
       });
       mesh.instanceMatrix.needsUpdate = true;
-      lastScale.current = scale;
+      lastUnit.current = unit;
     },
-    [points, shape, size, dummy],
+    [points, shape, px, dummy],
   );
 
   useEffect(() => {
-    apply(lastScale.current || 1);
+    lastUnit.current = 0; // force a redraw on the next frame
   }, [apply]);
 
-  useFrame(({ camera }) => {
-    const scale = scaleForDistance(camera.position.length());
-    if (Math.abs(scale - lastScale.current) / Math.max(lastScale.current, 1e-6) > 0.03) apply(scale);
+  useFrame((state) => {
+    const unit = unitPerPixel(state);
+    const grow = appear.current;
+    if (grow < 1 || Math.abs(unit - lastUnit.current) / Math.max(lastUnit.current, 1e-9) > 0.02) apply(unit, grow);
   });
 
   if (points.length === 0) return null;
   return (
     <instancedMesh key={`${shape}-${points.length}`} ref={ref} args={[undefined, undefined, points.length]} frustumCulled={false}>
-      {shape === 'ring' ? <torusGeometry args={[1, 0.25, 8, 20]} /> : <coneGeometry args={[0.7, 1.6, 10]} />}
+      {shape === 'ring' ? <torusGeometry args={[1, 0.16, 6, 18]} /> : <coneGeometry args={[0.6, 1.6, 8]} />}
       <meshBasicMaterial color={color} />
     </instancedMesh>
   );
@@ -99,6 +112,7 @@ export function ScenarioOverlay() {
   const exaggeration = useDeferredValue(useSceneStore((s) => s.exaggeration));
 
   const after = scenario.view === 'after';
+  const appearKey = `${scenario.edge}:${scenario.severity}:${scenario.snapshot}:${scenario.view}:${scenario.targetSet}`;
 
   const roadState = useMemo(() => {
     if (!assets || !graph || !run || scenario.edge === null) return null;
@@ -123,7 +137,7 @@ export function ScenarioOverlay() {
     const rows = run.placesBySnapshot[scenario.snapshot]?.[scenario.targetSet] ?? [];
     const toPoint = (place: number): Vec3 => {
       const p = graph.places[place];
-      return drapePoint(assets.terrain, assets.frame, p.lon, p.lat, exaggeration, 70);
+      return drapePoint(assets.terrain, assets.frame, p.lon, p.lat, exaggeration, 40);
     };
     return {
       isolated: rows.filter((r) => r.status === 'isolated').map((r) => toPoint(r.place)),
@@ -142,13 +156,13 @@ export function ScenarioOverlay() {
         <>
           <SegmentLines positions={roadState.slowed} color={STATE_COLORS.slowed} />
           <SegmentLines positions={roadState.closed} color={STATE_COLORS.closed} />
-          <Pin position={roadState.pin} />
+          <Pin position={roadState.pin} appearKey={appearKey} />
         </>
       ) : (
         <SegmentLines positions={roadState.selected} color={STATE_COLORS.selected} />
       )}
-      <ScenarioMarkers points={marks.delayed} shape="cone" color={STATE_COLORS.delayed} size={190} />
-      <ScenarioMarkers points={marks.isolated} shape="ring" color={STATE_COLORS.isolated} size={230} />
+      <ScenarioMarkers points={marks.delayed} shape="cone" color={STATE_COLORS.delayed} px={3.6} appearKey={appearKey} />
+      <ScenarioMarkers points={marks.isolated} shape="ring" color={STATE_COLORS.isolated} px={4.6} appearKey={appearKey} />
     </group>
   );
 }
