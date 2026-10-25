@@ -62,6 +62,8 @@ npm run dev
 
 Then open the address Vite prints (usually http://localhost:5173). Secrets are never committed.
 
+The situation brief uses the Claude API. Copy `web/.env.example` to `web/.env.local` and add your key (`ANTHROPIC_API_KEY`); the key stays on the server side and is never committed. Without a key the app still works and shows a rule-based template brief, labelled as such.
+
 On Windows, `run.bat` does all of this in one step (installing packages, fetching and building data if missing, then starting the app). `run.bat help` lists the other commands.
 
 ## Data and attribution

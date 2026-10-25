@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { buildBriefInput, fetchBrief, type BriefInput, type BriefLanguage, type BriefResult } from '../brief';
 import { loadAssets, type Assets } from '../lib/assets';
 import type { Facility } from '../lib/types';
 import { loadGraph } from './graphLoader';
@@ -28,6 +29,17 @@ export interface ScenarioSettings {
   view: MapView;
 }
 
+export interface BriefState {
+  status: 'idle' | 'loading' | 'ready';
+  result: BriefResult | null;
+  /** the numbers the brief was written from, kept for metric labels */
+  input: BriefInput | null;
+}
+
+const IDLE_BRIEF: BriefState = { status: 'idle', result: null, input: null };
+/** bumped whenever the scenario changes, so a late answer for an old scenario is dropped */
+let briefToken = 0;
+
 interface SceneState {
   status: Status;
   error: string | null;
@@ -44,6 +56,7 @@ interface SceneState {
   runError: string | null;
   /** set when a click found no road, cleared when one does */
   pickMiss: boolean;
+  brief: BriefState;
 
   load: () => Promise<void>;
   setLayer: (key: LayerKey, on: boolean) => void;
@@ -59,6 +72,7 @@ interface SceneState {
   setSnapshot: (index: number) => void;
   setView: (view: MapView) => void;
   clearScenario: () => void;
+  requestBrief: (language: BriefLanguage) => Promise<void>;
 }
 
 const DEFAULT_SCENARIO: ScenarioSettings = {
@@ -75,16 +89,17 @@ export const useSceneStore = create<SceneState>()((set, get) => {
   const recompute = (patch: Partial<ScenarioSettings>, resetPlayback: boolean): void => {
     const scenario = { ...get().scenario, ...patch };
     const { graph } = get();
+    briefToken++;
     if (!graph || scenario.edge === null) {
-      set({ scenario, run: null, runError: null });
+      set({ scenario, run: null, runError: null, brief: IDLE_BRIEF });
       return;
     }
     try {
       const run = runScenario(graph, { type: 'landslide', edge: scenario.edge, severity: scenario.severity }, { tGoldenMin: scenario.tGoldenMin });
       const snapshot = resetPlayback ? 0 : Math.min(scenario.snapshot, run.snapshots.length - 1);
-      set({ scenario: { ...scenario, snapshot }, run, runError: null });
+      set({ scenario: { ...scenario, snapshot }, run, runError: null, brief: IDLE_BRIEF });
     } catch (err) {
-      set({ scenario, run: null, runError: err instanceof Error ? err.message : String(err) });
+      set({ scenario, run: null, runError: err instanceof Error ? err.message : String(err), brief: IDLE_BRIEF });
     }
   };
 
@@ -103,6 +118,7 @@ export const useSceneStore = create<SceneState>()((set, get) => {
     run: null,
     runError: null,
     pickMiss: false,
+    brief: IDLE_BRIEF,
 
     load: async () => {
       if (get().status === 'loading' || get().status === 'ready') return;
@@ -136,9 +152,31 @@ export const useSceneStore = create<SceneState>()((set, get) => {
     setThreshold: (minutes) => {
       if (Number.isFinite(minutes)) recompute({ tGoldenMin: Math.min(240, Math.max(10, Math.round(minutes))) }, false);
     },
-    setTargetSet: (targetSet) => set((s) => ({ scenario: { ...s.scenario, targetSet } })),
+    setTargetSet: (targetSet) => {
+      briefToken++;
+      set((s) => ({ scenario: { ...s.scenario, targetSet }, brief: IDLE_BRIEF }));
+    },
     setSnapshot: (index) => set((s) => ({ scenario: { ...s.scenario, snapshot: index } })),
     setView: (view) => set((s) => ({ scenario: { ...s.scenario, view } })),
-    clearScenario: () => set({ scenario: { ...get().scenario, edge: null, snapshot: 0, view: 'after' }, run: null, runError: null, pickMiss: false }),
+    clearScenario: () => {
+      briefToken++;
+      set({ scenario: { ...get().scenario, edge: null, snapshot: 0, view: 'after' }, run: null, runError: null, pickMiss: false, brief: IDLE_BRIEF });
+    },
+
+    requestBrief: async (language) => {
+      const { graph, run, scenario } = get();
+      if (!graph || !run || scenario.edge === null) return;
+      const input = buildBriefInput(
+        graph,
+        run,
+        { edge: scenario.edge, severity: scenario.severity, tGoldenMin: scenario.tGoldenMin, targetSet: scenario.targetSet },
+        language,
+      );
+      const token = ++briefToken;
+      set({ brief: { status: 'loading', result: null, input } });
+      const result = await fetchBrief(input);
+      if (token !== briefToken) return; // the scenario changed while the answer was on its way
+      set({ brief: { status: 'ready', result, input } });
+    },
   };
 });

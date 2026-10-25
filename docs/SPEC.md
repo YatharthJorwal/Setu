@@ -137,21 +137,18 @@ Every metric shown in the UI carries a unit and either a data-source tag or an a
 
 ## 8. LLM brief contract
 
-The LLM narrates; it does not compute.
+The LLM narrates; it does not compute. Implemented in `web/src/brief/` (M6).
 
-**Input** (JSON, built by the app from simulation output):
+**Input** (JSON, built from the finished run by `buildBriefInput`; exact shape in `web/src/brief/types.ts`):
 
-```
-{
-  scenario: { type, severity, location_label, seed },
-  metrics: { key: { value, unit, tag: "data" | "assumption" } },
-  top_affected: [ { village, population, access_time_before_min, access_time_after_min } ],
-  assumptions: [ { key, value, note } ],
-  language: "en" | "hi"
-}
-```
+- `language`: `"en"` or `"hi"`
+- `scenario`: severity, road name and class, length, assumed reopening time, destination set, delay threshold
+- `metrics`: a keyed map, each `{ value | null, unit, tag: "data" | "assumption", label }`. Keys: `cut_off_places`, `delayed_places_before`, `delayed_places_after`, `typical_access_min_before`, `typical_access_min_after`, `people_cut_off`, and, when access is restored, `restored_after_h_min` and `restored_after_h_max`. A `null` value means unknown and must be described as unknown.
+- `top_affected`: up to five places with status (`cut_off` or `delayed`) and minutes before and after
+- `data_gaps`: places off any drivable road, places with no route before the event
+- `assumptions`: the few modelled values that matter here
 
-**Output** (JSON, validated server-side with a schema):
+**Output** (JSON, validated on the server and again in the browser):
 
 ```
 {
@@ -164,10 +161,13 @@ The LLM narrates; it does not compute.
 
 Rules:
 
-- The model may only reference numbers present in the input. The server rejects output containing numbers not in the input.
-- `metric_refs` must point to keys in `metrics`.
-- Output always includes caveats stating that this is a simulation using the listed assumptions.
-- If the call fails or validation fails, show a precomputed fallback brief for the guided scenarios, clearly marked as pre-generated.
+- The model may only use numbers present in the input (including digits inside names such as "NH107"), copied exactly or rounded to a whole number or one decimal. Anything calculated, such as a sum, difference or percentage, is rejected. Numbers written in Devanagari digits are checked the same way.
+- `metric_refs` must point to keys in `metrics`, and every action must cite at least one.
+- Output always includes a caveat that this is a simulation using assumed values.
+- Place and road names from open map data are treated as data, not instructions: control characters are stripped and length is capped before they reach the model.
+- On a failed check the server asks the model once more, listing exactly what was wrong. After two failures it returns an error.
+- **Fallback:** if the AI service is missing, unreachable or fails the check, the interface shows a rule-based template brief built from the same numbers (and validated by the same code), clearly labelled "Template summary, not AI", with the reason. This replaces the earlier idea of pre-generated briefs, which would go stale whenever an assumption changed. The template is English only.
+- Request shape: no `temperature`, no assistant prefill, no forced tool choice and no thinking settings, because the current models reject them. The default model is `claude-haiku-5-5`; `ANTHROPIC_MODEL` overrides it. `max_tokens` is generous because thinking shares it with the reply.
 
 ## 9. Honesty requirements
 

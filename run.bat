@@ -138,6 +138,7 @@ echo [test] All checks passed.
 goto :eof
 
 :serve
+if not exist "web\.env.local" echo [run] No web\.env.local found, so the situation brief will use its template fallback. See web\.env.example to enable the AI brief.
 echo [run] Starting the app. Press Ctrl+C to stop.
 cd web
 call npm run dev -- --open

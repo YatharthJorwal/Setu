@@ -122,3 +122,16 @@ Decision:
 - Motion is short and functional: cards rise in, numbers count to new values, markers ease in. All of it switches off under `prefers-reduced-motion`.
 - The legend draws each symbol as it appears on the map, and scenario symbols appear only while a scenario is running.
 Consequences: A calmer, more legible interface. Marker sizes are fixed pixel values chosen by eye and may need tuning on other screens.
+
+## ADR-013: The AI situation brief service (M6)
+Date: 2026-10-25
+Status: Accepted
+Context: Judges score meaningful use of AI, and the project's AI element is the brief written from the simulation's numbers. It must be impossible for the model to put an invented figure in front of an officer, the key must stay secret, and the demo must still work when the AI service does not.
+Decision:
+- The model narrates and never computes. Every number in its answer must appear in the input (digits in names included); derived numbers are rejected. Checked on the server and again in the browser. One correction retry, then an error.
+- Plain-JSON replies, parsed and validated, rather than forced tool use. Verified against the current model documentation: Sonnet 5.5 rejects `temperature`, assistant prefill and forced tool choice, and `thinking: disabled`; adaptive thinking is on by default and shares `max_tokens` with the reply. The request therefore sends only model, `max_tokens` (generous), system prompt and messages. A test asserts the request carries none of the rejected fields.
+- Default model `claude-haiku-5-5` for speed and cost; `ANTHROPIC_MODEL` switches to `claude-sonnet-5-5`. Direct HTTP with `fetch`, no SDK dependency.
+- Names from open map data are untrusted text going to a model: control characters stripped, length capped, and the prompt says to treat them as data. The output check limits what an injected instruction could achieve.
+- One handler, two adapters (Vite dev route, Netlify function). The API key is only ever read from server-side environment variables.
+- Fallback is a rule-based template from the same numbers, validated by the same code, labelled "Template summary, not AI" with the reason. Chosen over pre-generated AI briefs because those would go stale whenever an assumption changes.
+Consequences: The demo never shows a broken brief. A per-instance rate limit is not enough protection for a public site with a paid key; before sharing a public link, set a spending limit on the key. Netlify's default function time limit may be shorter than a slow answer; if briefs time out in production, use Haiku or raise the limit. Hindi quality depends on the model and has not been reviewed by a Hindi speaker.

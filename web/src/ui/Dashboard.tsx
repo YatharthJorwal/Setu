@@ -3,6 +3,7 @@ import { STATE_COLORS } from '../lib/palette';
 import { edgeSummary, type SetMetrics } from '../state/sim-api';
 import { useSceneStore, type MapView } from '../state/store';
 import { AnimatedNumber } from './AnimatedNumber';
+import { BriefPanel } from './BriefPanel';
 import { ConeIcon, RingIcon } from './Icons';
 import { Segmented } from './Segmented';
 import { severityLabel } from './ScenarioPanel';
@@ -171,6 +172,8 @@ export function Dashboard() {
           </ul>
         </>
       )}
+
+      <BriefPanel />
 
       <p className="small muted spaced">{t('dash.notCounted', { a: fmtN(m.places_unconnected), b: fmtN(m.places_no_baseline) })}</p>
       <p className="small faint">{t('dash.caveat')}</p>

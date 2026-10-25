@@ -1,0 +1,10 @@
+# Deployment settings. Not yet tested by the author: check the first deploy log.
+[build]
+  command = "cd web && npm install && npm run build"
+  publish = "web/dist"
+
+[functions]
+  directory = "server"
+
+[build.environment]
+  NODE_VERSION = "20"

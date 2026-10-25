@@ -156,13 +156,12 @@ Zustand slices:
 
 Rules: the store is the only owner of worker communication. Derived values (for example "current metric snapshot at time t") are selectors, not stored copies.
 
-## 10. LLM brief service (`server/`)
+## 10. LLM brief service
 
-- One endpoint: `POST /api/brief`.
-- Steps: validate request against the input schema, build the prompt from a fixed template, call the model, parse and validate the output against the output schema, reject output containing numbers absent from the input, return the result.
-- The API key lives in server environment variables only.
-- Basic rate limiting and request size limits.
-- The client falls back to pre-generated briefs for the guided scenarios when the call fails, and marks them as pre-generated.
+- One endpoint: `POST /api/brief`. The logic is a single framework-agnostic function, `handleBrief`, in `web/src/brief/handler.ts`. Two thin adapters call it: a Vite dev-server route in `web/vite.config.ts` (key from `web/.env.local`) and a Netlify function in `server/brief.mts` (key from the site's environment variables).
+- Steps: limit the request size, parse and clean the request (`parseBriefInput`), apply a small per-client rate limit, call the Messages API with a fixed system prompt, extract the JSON object, validate it (`validateBrief`: schema, metric references, and the number check against the input), retry once with the exact problems listed, then return the result or a clear error status.
+- The API key lives in server environment variables only. It is never sent to the browser and never included in any response.
+- The browser (`web/src/brief/client.ts`) validates the answer again, and falls back to the rule-based template (`template.ts`) whenever the service is unavailable or the answer is rejected, labelling it as such.
 - Contract: `docs/SPEC.md` section 8.
 
 ## 11. Testing strategy
@@ -185,5 +184,5 @@ Rules: the store is the only owner of worker communication. Derived values (for 
 | Thin or missing hill road data in OSM | Hand-patch the corridor, record each patch in `provenance.json`, show it in the provenance panel |
 | Village population not available at usable resolution | Estimate from building counts with a stated persons-per-household assumption |
 | Terrain mesh too heavy for mid-range laptops | Chunked tiles, lower resolution beyond the focus area, measure early |
-| LLM output invents figures | Server-side number check against input, schema validation, pre-generated fallback |
+| LLM output invents figures | Number check against the input (server and browser), schema validation, one correction retry, labelled template fallback |
 | Scope creep into extra scenarios | Stretch scenarios stay behind the v1 acceptance criteria |
