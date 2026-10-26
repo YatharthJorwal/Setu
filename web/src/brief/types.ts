@@ -49,12 +49,17 @@ export interface BriefOutput {
 }
 
 export type BriefSource = 'ai' | 'template';
+export type BriefProvider = 'anthropic' | 'ollama';
 
 export interface BriefResult {
   brief: BriefOutput;
   source: BriefSource;
   /** the model that wrote it, when source is "ai" */
   model?: string;
+  /** where the model ran: the Claude API, or Ollama on this computer */
+  provider?: BriefProvider;
+  /** a short explanation from the server when the template was used, such as how to fix it */
+  detail?: string;
   /** why the template was used instead of the AI service */
   reason?: 'no_key' | 'unreachable' | 'invalid' | 'language' | 'error';
 }

@@ -135,3 +135,14 @@ Decision:
 - One handler, two adapters (Vite dev route, Netlify function). The API key is only ever read from server-side environment variables.
 - Fallback is a rule-based template from the same numbers, validated by the same code, labelled "Template summary, not AI" with the reason. Chosen over pre-generated AI briefs because those would go stale whenever an assumption changes.
 Consequences: The demo never shows a broken brief. A per-instance rate limit is not enough protection for a public site with a paid key; before sharing a public link, set a spending limit on the key. Netlify's default function time limit may be shorter than a slow answer; if briefs time out in production, use Haiku or raise the limit. Hindi quality depends on the model and has not been reviewed by a Hindi speaker.
+
+## ADR-014: A local Ollama model is the default writer of the brief
+Date: 2026-10-25
+Status: Accepted
+Context: The author chose Qwen 3.5 4B, already installed under Ollama, over a paid API: free, no key to protect, nothing leaves the machine, and good enough for a short narration of numbers the simulation already produced. A 4B model is more likely than a large one to break the number rule or to write weak Hindi.
+Decision:
+- Add Ollama as a second provider behind the same handler, validation, retry and fallback (ADR-013). The default is a local model, `qwen3.5:4b`, with no configuration. A Claude key, or `BRIEF_PROVIDER=anthropic`, switches to the Claude API.
+- Verified against Ollama's native API documentation: `POST /api/chat` takes `stream`, `format` (a JSON schema, enforced during generation), a top-level `think`, `keep_alive` and `options`. Sources disagree on whether the Qwen 3.5 small models think by default, so thinking is switched off explicitly; if a build rejects the `think` field, the request is repeated without it.
+- Three measures for the small model: schema-constrained output with `metric_refs` limited to real keys; an explicit list of the numbers it may write in every request; one worked example in its system prompt. The number check, one correction retry and the labelled template fallback still apply, so a failing model costs a few seconds, never a wrong number.
+- Errors are explained to the person: Ollama not running, or the model not pulled (with the exact `ollama pull` command), appear under the template brief.
+Consequences: No key, no cost, works offline. Quality is lower than a large model, and Hindi in particular needs a Hindi speaker's review before anyone relies on it; `OLLAMA_MODEL=qwen3.5:9b` is the first thing to try if quality or number discipline disappoints. A hosted deployment cannot reach a model on the author's computer, so a public link would show the template fallback unless the Claude API is configured. Not yet tried by the author against a real Ollama, so exact behaviour of the `think` and `format` fields on this build is unconfirmed.

@@ -167,7 +167,10 @@ Rules:
 - Place and road names from open map data are treated as data, not instructions: control characters are stripped and length is capped before they reach the model.
 - On a failed check the server asks the model once more, listing exactly what was wrong. After two failures it returns an error.
 - **Fallback:** if the AI service is missing, unreachable or fails the check, the interface shows a rule-based template brief built from the same numbers (and validated by the same code), clearly labelled "Template summary, not AI", with the reason. This replaces the earlier idea of pre-generated briefs, which would go stale whenever an assumption changed. The template is English only.
-- Request shape: no `temperature`, no assistant prefill, no forced tool choice and no thinking settings, because the current models reject them. The default model is `claude-haiku-5-5`; `ANTHROPIC_MODEL` overrides it. `max_tokens` is generous because thinking shares it with the reply.
+- **Two providers, same checks.** The brief is written either by a local model through Ollama (the default, no key and no data leaves the computer) or by the Claude API. With nothing configured it tries Ollama, using `qwen3.5:4b`. `BRIEF_PROVIDER`, `OLLAMA_MODEL`, `OLLAMA_URL`, `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` change that. Whichever writes it, the answer goes through the same validation, retry and fallback.
+- **Ollama request:** `POST /api/chat` with `stream: false`, `think: false`, a JSON-schema `format` (so the shape is enforced while the model writes, and `metric_refs` can only be keys that exist in the input), low temperature, and a fixed context size. The prompt gives a small model a worked example and an explicit list of the numbers it may write.
+- **Claude request:** no `temperature`, no assistant prefill, no forced tool choice and no thinking settings, because the current models reject them. The default model is `claude-haiku-5-5`. `max_tokens` is generous because thinking shares it with the reply.
+- A hosted copy of the app cannot reach a model running on someone's own computer. For a public demo link, either run it locally, use the Claude API with a spending limit, or accept the labelled template fallback.
 
 ## 9. Honesty requirements
 

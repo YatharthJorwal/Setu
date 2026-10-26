@@ -2,7 +2,7 @@ import { templateBrief } from './template';
 import type { BriefInput, BriefResult } from './types';
 import { validateBrief } from './validate';
 
-const TIMEOUT_MS = 60_000;
+const TIMEOUT_MS = 130_000; // a local model can take a while to load the first time
 
 /**
  * Asks the server for an AI brief. Whatever goes wrong (no key, no server, a slow or invalid answer),
@@ -14,10 +14,11 @@ export async function fetchBrief(
   fetchImpl: typeof fetch = fetch,
   url = '/api/brief',
 ): Promise<BriefResult> {
-  const fallback = (reason: NonNullable<BriefResult['reason']>): BriefResult => ({
+  const fallback = (reason: NonNullable<BriefResult['reason']>, detail?: string): BriefResult => ({
     brief: templateBrief(input),
     source: 'template',
     reason,
+    ...(detail ? { detail } : {}),
   });
 
   const controller = new AbortController();
@@ -29,20 +30,26 @@ export async function fetchBrief(
       body: JSON.stringify(input),
       signal: controller.signal,
     });
-    if (res.status === 503) return fallback('no_key');
-    if (!res.ok) {
-      let code = '';
-      try {
-        code = String(((await res.json()) as { error?: unknown }).error ?? '');
-      } catch {
-        /* no readable body */
-      }
-      return fallback(code === 'invalid_output' ? 'invalid' : res.status === 404 || res.status === 504 ? 'unreachable' : 'error');
-    }
-    const data = (await res.json()) as { brief?: unknown; model?: unknown };
+    let body: { error?: unknown; message?: unknown; brief?: unknown; model?: unknown; provider?: unknown } = {};
     try {
-      const brief = validateBrief(data.brief, input);
-      return { brief, source: 'ai', model: typeof data.model === 'string' ? data.model : undefined };
+      body = (await res.json()) as typeof body;
+    } catch {
+      /* no readable body: the status code has to do */
+    }
+    const detail = typeof body.message === 'string' ? body.message.slice(0, 200) : undefined;
+    if (res.status === 503) return fallback('no_key', detail);
+    if (!res.ok) {
+      const code = String(body.error ?? '');
+      return fallback(code === 'invalid_output' ? 'invalid' : res.status === 404 || res.status === 504 ? 'unreachable' : 'error', detail);
+    }
+    try {
+      const brief = validateBrief(body.brief, input);
+      return {
+        brief,
+        source: 'ai',
+        model: typeof body.model === 'string' ? body.model : undefined,
+        provider: body.provider === 'ollama' || body.provider === 'anthropic' ? body.provider : undefined,
+      };
     } catch {
       return fallback('invalid');
     }

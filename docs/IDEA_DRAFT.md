@@ -27,7 +27,7 @@ The intended user is a district control room officer deciding what to pre-positi
 - Network analysis on real roads and terrain: closures change the road graph, and shortest-path routing from every open health facility gives access times for all villages. This is deterministic and testable.
 - Real-terrain 3D visualisation (WebGL) so that officers and communities can see why a valley is vulnerable.
 - Simulated people and ambulances following scenario-specific behaviour on the surviving network.
-- A language model writes a plain-language situation brief in English and Hindi from the computed numbers. It never calculates or invents figures: a validation step rejects any number that is not in the simulation output, and asks the model to correct itself once. If the AI service is unavailable, a rule-based summary is shown instead, clearly labelled.
+- A language model writes a plain-language situation brief in English and Hindi from the computed numbers. It never calculates or invents figures: a validation step rejects any number that is not in the simulation output, and asks the model to correct itself once. The model runs locally on the officer's own computer through Ollama, so no data leaves the machine and no paid service is needed. If no model is available, a rule-based summary is shown instead, clearly labelled.
 
 ## Expected impact
 

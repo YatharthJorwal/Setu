@@ -89,10 +89,11 @@ export function BriefPanel() {
           <p className={result.source === 'ai' ? 'source ai' : 'source template'}>
             {result.source === 'ai'
               ? result.model
-                ? t('brief.sourceAi', { model: result.model })
+                ? t(result.provider === 'ollama' ? 'brief.sourceLocal' : 'brief.sourceAi', { model: result.model })
                 : t('brief.sourceAiNoModel')
               : t('brief.sourceTemplate', { reason: t(REASON_KEY[result.reason ?? 'error']) })}
             {result.source === 'template' && brief.input?.language === 'hi' ? ` ${t('brief.englishOnly')}` : ''}
+            {result.source === 'template' && result.detail ? ` ${t('brief.detail', { detail: result.detail })}` : ''}
           </p>
         </article>
       )}

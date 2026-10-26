@@ -1,5 +1,7 @@
 // Netlify function for POST /api/brief. The same handler runs in the Vite dev server (web/vite.config.ts).
-// Set ANTHROPIC_API_KEY (and optionally ANTHROPIC_MODEL) in the site's environment variables, never in the repo.
+// A hosted site cannot reach an Ollama model running on someone's own computer, so here set BRIEF_PROVIDER=anthropic
+// and ANTHROPIC_API_KEY in the site's environment variables (never in the repo). Without them the app shows its
+// labelled template brief.
 import { handleBrief } from '../web/src/brief/handler';
 
 export default async (req: Request): Promise<Response> => {
@@ -7,7 +9,13 @@ export default async (req: Request): Promise<Response> => {
   const body = await req.text();
   const result = await handleBrief(
     body,
-    { ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY, ANTHROPIC_MODEL: process.env.ANTHROPIC_MODEL },
+    {
+      BRIEF_PROVIDER: process.env.BRIEF_PROVIDER,
+      ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+      ANTHROPIC_MODEL: process.env.ANTHROPIC_MODEL,
+      OLLAMA_URL: process.env.OLLAMA_URL,
+      OLLAMA_MODEL: process.env.OLLAMA_MODEL,
+    },
     fetch,
     req.headers.get('x-nf-client-connection-ip') ?? 'anon',
   );

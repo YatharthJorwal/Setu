@@ -3,6 +3,7 @@ import { lineGraph, makeGraph } from '../sim/fixtures';
 import { runScenario } from '../sim/run';
 import { buildBriefInput, cleanName } from './buildInput';
 import { sampleInput } from './fixtures';
+import { briefJsonSchema, systemPrompt } from './prompt';
 import { templateBrief } from './template';
 import type { BriefInput, BriefOutput } from './types';
 import { BriefError, allowedNumbers, extractNumbers, parseBriefInput, validateBrief } from './validate';
@@ -175,5 +176,20 @@ describe('buildBriefInput', () => {
     expect(cleanName('  A\u0000B\n C  ')).toBe('A B C');
     expect(cleanName('')).toBe('Unnamed place');
     expect(cleanName('x'.repeat(200)).length).toBe(60);
+  });
+});
+
+describe('prompts for small models', () => {
+  it('adds a worked example only for the local provider', () => {
+    expect(systemPrompt('en', 'ollama')).toContain('Example of the style');
+    expect(systemPrompt('en', 'anthropic')).not.toContain('Example of the style');
+    expect(systemPrompt('hi', 'ollama')).toContain('Devanagari');
+  });
+
+  it('builds a schema that only allows metric keys from the input', () => {
+    const schema = briefJsonSchema(sampleInput()) as { required: string[]; properties: Record<string, { items: { properties: { metric_refs: { items: { enum: string[] } } } } }> };
+    expect(schema.required).toEqual(['summary', 'key_risks', 'recommended_actions', 'caveats']);
+    expect(schema.properties.recommended_actions.items.properties.metric_refs.items.enum).toContain('cut_off_places');
+    expect(schema.properties.recommended_actions.items.properties.metric_refs.items.enum).not.toContain('made_up');
   });
 });

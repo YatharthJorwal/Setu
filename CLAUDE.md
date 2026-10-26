@@ -56,7 +56,9 @@ pipeline (exists):
   python -m pipeline.audit --area rudraprayag [--skip-dem]
   python -m unittest discover -s pipeline/tests -t .
 
-windows launcher (exists): run.bat | run.bat help | run.bat graph | run.bat tiers | run.bat test
+windows launcher (exists): run.bat | run.bat help | run.bat graph | run.bat tiers | run.bat test | run.bat info | run.bat save "message"
+  info = show which folder this is, its git state and whether it has the latest code
+  save = commit everything and push, always from the folder run.bat lives in. Use this instead of typing git commands, so changes are never committed from a stale copy.
   graph = rebuild the road graph and print the real-data network report
   tiers = write and open the facility tier review sheet
 
@@ -77,7 +79,7 @@ planned (not yet written):
 Pre-alpha. Docs, an empty web scaffold, and the data-audit scripts exist.
 Desk audit and local audit run 1 done (see `docs/DATA.md` section 6). Rudraprayag corridor accepted (ADR-006).
 Pilot area: Rudraprayag corridor (proposed, confirm in `docs/DECISIONS.md` ADR-006).
-M3 ran on the real corridor 2026-10-24 (1,306 road segments, 789 places, 71 facilities; closing the first NH107 segment out of Rudraprayag cuts off 142 places from emergency care). M4 code written the same day (click a road, severity, dashboard, before/after, timeline); not yet run by the author. M4 ran on the real corridor (clicking roads, dashboard, before/after all worked in screenshots). Design pass 1 written (ADR-012). M6 code written 2026-10-25: AI situation brief (ADR-013). To try it, copy `web/.env.example` to `web/.env.local` and add an Anthropic API key; without one the brief uses a labelled template fallback. Next: try it with a real key, review the facility tier sheet (ADR-008), M7 report export, M5 agents if time allows.
+M3 ran on the real corridor 2026-10-24 (1,306 road segments, 789 places, 71 facilities; closing the first NH107 segment out of Rudraprayag cuts off 142 places from emergency care). M4 code written the same day (click a road, severity, dashboard, before/after, timeline); not yet run by the author. M4 ran on the real corridor (clicking roads, dashboard, before/after all worked in screenshots). Design pass 1 written (ADR-012). M6 code written 2026-10-25: AI situation brief (ADR-013, ADR-014). It runs on a local Ollama model (`qwen3.5:4b`) with no setup; start Ollama and it works. A Claude key in `web/.env.local` switches to the Claude API. When neither is available the brief is a labelled template. Next: try it with a real key, review the facility tier sheet (ADR-008), M7 report export, M5 agents if time allows.
 
 ## Definition of done (any change)
 

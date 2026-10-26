@@ -62,7 +62,9 @@ npm run dev
 
 Then open the address Vite prints (usually http://localhost:5173). Secrets are never committed.
 
-The situation brief uses the Claude API. Copy `web/.env.example` to `web/.env.local` and add your key (`ANTHROPIC_API_KEY`); the key stays on the server side and is never committed. Without a key the app still works and shows a rule-based template brief, labelled as such.
+The situation brief is written by a language model and every figure is checked against the simulation. By default it uses a local model through [Ollama](https://ollama.com) (`ollama pull qwen3.5:4b`), so no key is needed and nothing leaves your computer. To use the Claude API instead, copy `web/.env.example` to `web/.env.local` and set `ANTHROPIC_API_KEY`; the key stays on the server side and is never committed. If no model is available the app still works and shows a rule-based template brief, labelled as such.
+
+Work in one folder only. Copies of this repo unpacked elsewhere (for example in Downloads) are stale and must not be committed from. `run.bat info` shows which folder you are in and whether it is up to date; `run.bat save "message"` commits and pushes from the right place.
 
 On Windows, `run.bat` does all of this in one step (installing packages, fetching and building data if missing, then starting the app). `run.bat help` lists the other commands.
 

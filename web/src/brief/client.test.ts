@@ -14,9 +14,18 @@ function fake(status: number, json?: unknown, throws = false): typeof fetch {
 
 describe('fetchBrief', () => {
   it('returns the AI brief when the server answers and it passes the check', async () => {
-    const r = await fetchBrief(input, fake(200, { brief: templateBrief(input), model: 'claude-haiku-5-5' }));
+    const r = await fetchBrief(input, fake(200, { brief: templateBrief(input), model: 'claude-haiku-5-5', provider: 'anthropic' }));
     expect(r.source).toBe('ai');
     expect(r.model).toBe('claude-haiku-5-5');
+    expect(r.provider).toBe('anthropic');
+    expect((await fetchBrief(input, fake(200, { brief: templateBrief(input), model: 'qwen3.5:4b', provider: 'ollama' }))).provider).toBe('ollama');
+    expect((await fetchBrief(input, fake(200, { brief: templateBrief(input), model: 'x', provider: 'something' }))).provider).toBeUndefined();
+  });
+
+  it('passes the server explanation through when it falls back', async () => {
+    const r = await fetchBrief(input, fake(502, { error: 'upstream_error', message: "model 'qwen3.5:4b' not found. Try: ollama pull qwen3.5:4b" }));
+    expect(r.source).toBe('template');
+    expect(r.detail).toContain('ollama pull');
   });
 
   it('falls back to the template and says why', async () => {

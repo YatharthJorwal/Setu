@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { sampleInput } from './fixtures';
-import { API_URL, DEFAULT_MODEL, MAX_BODY_BYTES, handleBrief, resetRateLimit } from './handler';
+import { API_URL, DEFAULT_MODEL, DEFAULT_OLLAMA_MODEL, MAX_BODY_BYTES, chooseProvider, handleBrief, resetRateLimit } from './handler';
+import { allowedNumberList } from './prompt';
 import { templateBrief } from './template';
 
 const input = sampleInput();
@@ -87,8 +88,9 @@ describe('handleBrief', () => {
   it('reports a missing key, bad requests and oversize requests without calling the model', async () => {
     resetRateLimit();
     const { fn, calls } = fakeFetch([reply(goodReply)]);
-    expect((await handleBrief(body, {}, fn, 'f')).status).toBe(503);
-    expect((await handleBrief(body, { ANTHROPIC_API_KEY: '   ' }, fn, 'f')).status).toBe(503);
+    // with no provider chosen and no key, the local model is used; the Claude API needs a key when it is selected
+    expect((await handleBrief(body, { BRIEF_PROVIDER: 'anthropic' }, fn, 'f')).status).toBe(503);
+    expect((await handleBrief(body, { BRIEF_PROVIDER: 'anthropic', ANTHROPIC_API_KEY: '   ' }, fn, 'f')).status).toBe(503);
     expect((await handleBrief('{nope', { ANTHROPIC_API_KEY: 'k' }, fn, 'f')).status).toBe(400);
     expect((await handleBrief('{"language":"en"}', { ANTHROPIC_API_KEY: 'k' }, fn, 'f')).status).toBe(400);
     expect((await handleBrief('x'.repeat(MAX_BODY_BYTES + 1), { ANTHROPIC_API_KEY: 'k' }, fn, 'f')).status).toBe(413);
@@ -112,5 +114,111 @@ describe('handleBrief', () => {
     for (let i = 0; i < 14; i++) last = (await handleBrief(body, { ANTHROPIC_API_KEY: 'k' }, fn, 'busy')).status;
     expect(last).toBe(429);
     expect((await handleBrief(body, { ANTHROPIC_API_KEY: 'k' }, fn, 'someone-else')).status).toBe(200);
+  });
+});
+
+const ollamaReply = (text: string, extra: Record<string, unknown> = {}) => ({
+  json: { model: 'qwen3.5:4b', message: { role: 'assistant', content: text }, done: true, done_reason: 'stop', ...extra },
+});
+const OLLAMA_CHAT = 'http://127.0.0.1:11434/api/chat';
+
+describe('provider choice', () => {
+  it('uses Ollama unless there is an Anthropic key, and obeys an explicit choice', () => {
+    expect(chooseProvider({})).toBe('ollama');
+    expect(chooseProvider({ ANTHROPIC_API_KEY: '  ' })).toBe('ollama');
+    expect(chooseProvider({ ANTHROPIC_API_KEY: 'k' })).toBe('anthropic');
+    expect(chooseProvider({ ANTHROPIC_API_KEY: 'k', BRIEF_PROVIDER: 'ollama' })).toBe('ollama');
+    expect(chooseProvider({ BRIEF_PROVIDER: ' Anthropic ' })).toBe('anthropic');
+    expect(chooseProvider({ BRIEF_PROVIDER: 'something else' })).toBe('ollama');
+  });
+});
+
+describe('handleBrief with Ollama', () => {
+  it('asks the local model with constrained output and thinking off, with no setup at all', async () => {
+    resetRateLimit();
+    const { fn, calls } = fakeFetch([ollamaReply(goodReply)]);
+    const r = await handleBrief(body, {}, fn, 'o1');
+    expect(r.status).toBe(200);
+    const out = r.body as { source: string; model: string; provider: string };
+    expect(out.provider).toBe('ollama');
+    expect(out.model).toBe('qwen3.5:4b');
+    expect(calls[0].url).toBe(OLLAMA_CHAT);
+    expect('x-api-key' in calls[0].init.headers).toBe(false);
+
+    const sent = JSON.parse(calls[0].init.body);
+    expect(sent.model).toBe(DEFAULT_OLLAMA_MODEL);
+    expect(sent.stream).toBe(false);
+    expect(sent.think).toBe(false);
+    expect(sent.options.temperature).toBeLessThan(0.5);
+    expect(sent.options.num_ctx).toBeGreaterThanOrEqual(8192);
+    expect(sent.messages[0].role).toBe('system');
+    expect(sent.messages[sent.messages.length - 1].role).toBe('user');
+    expect(sent.messages[sent.messages.length - 1].content).toContain('Numbers you may write');
+    // the schema only lets the model cite metrics that exist
+    const refs = sent.format.properties.recommended_actions.items.properties.metric_refs.items.enum;
+    expect(refs).toEqual(Object.keys(input.metrics));
+    expect(sent.format.required).toContain('summary');
+    // the system prompt for a small model carries a worked example
+    expect(sent.messages[0].content).toContain('Example of the style');
+  });
+
+  it('uses the model and address from the environment, ignoring a trailing slash', async () => {
+    resetRateLimit();
+    const { fn, calls } = fakeFetch([ollamaReply(goodReply)]);
+    await handleBrief(body, { OLLAMA_MODEL: 'qwen3.5:9b', OLLAMA_URL: 'http://192.168.1.5:11434/' }, fn, 'o2');
+    expect(calls[0].url).toBe('http://192.168.1.5:11434/api/chat');
+    expect(JSON.parse(calls[0].init.body).model).toBe('qwen3.5:9b');
+  });
+
+  it('retries once without the think field if the build rejects it', async () => {
+    resetRateLimit();
+    const { fn, calls } = fakeFetch([{ status: 400, json: { error: 'invalid option: think is not supported' } }, ollamaReply(goodReply)]);
+    const r = await handleBrief(body, {}, fn, 'o3');
+    expect(r.status).toBe(200);
+    expect(calls.length).toBe(2);
+    expect('think' in JSON.parse(calls[0].init.body)).toBe(true);
+    expect('think' in JSON.parse(calls[1].init.body)).toBe(false);
+  });
+
+  it('tells the person how to fix a missing model or a stopped Ollama', async () => {
+    resetRateLimit();
+    const missing = await handleBrief(body, {}, fakeFetch([{ status: 404, json: { error: "model 'qwen3.5:4b' not found" } }]).fn, 'o4');
+    expect(missing.status).toBe(502);
+    expect((missing.body as { message: string }).message).toContain('ollama pull qwen3.5:4b');
+    const down = await handleBrief(body, {}, fakeFetch([{ throws: true }]).fn, 'o4');
+    expect(down.status).toBe(504);
+    expect((down.body as { message: string }).message).toContain('Is it running');
+  });
+
+  it('corrects a small model that invents a number, and gives up cleanly when it keeps failing', async () => {
+    resetRateLimit();
+    const bad = JSON.parse(goodReply);
+    bad.summary = 'About 999 places would be cut off.';
+    const retry = fakeFetch([ollamaReply(JSON.stringify(bad)), ollamaReply(goodReply)]);
+    expect((await handleBrief(body, {}, retry.fn, 'o5')).status).toBe(200);
+    const second = JSON.parse(retry.calls[1].init.body);
+    expect(second.messages.length).toBe(4); // system, user, the rejected answer, the correction
+    expect(second.messages[3].content).toContain('999');
+
+    const stubborn = fakeFetch([ollamaReply('', { message: { role: 'assistant', content: '', thinking: 'hmm...' } })]);
+    const r = await handleBrief(body, {}, stubborn.fn, 'o6');
+    expect(r.status).toBe(502);
+    expect(stubborn.calls.length).toBe(2);
+  });
+
+  it('refuses to use the Claude API when it is selected but there is no key', async () => {
+    resetRateLimit();
+    const { fn, calls } = fakeFetch([ollamaReply(goodReply)]);
+    expect((await handleBrief(body, { BRIEF_PROVIDER: 'anthropic' }, fn, 'o7')).status).toBe(503);
+    expect(calls.length).toBe(0);
+  });
+});
+
+describe('prompt helpers', () => {
+  it('lists the allowed numbers in ascending order', () => {
+    const list = allowedNumberList(input);
+    expect(list).toContain('142');
+    expect(list).toContain('107');
+    expect(list.map(Number)).toEqual([...list.map(Number)].sort((a, b) => a - b));
   });
 });

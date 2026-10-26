@@ -20,7 +20,7 @@ function readBody(req: IncomingMessage, limit = 100_000): Promise<string> {
 
 /**
  * Serves POST /api/brief during `npm run dev`, with the same handler the Netlify function uses.
- * The API key comes from web/.env.local and never reaches the browser.
+ * Settings come from web/.env.local. A Claude API key, if used, never reaches the browser.
  */
 function briefApi(env: Record<string, string>): Plugin {
   return {
@@ -37,7 +37,13 @@ function briefApi(env: Record<string, string>): Plugin {
           .then((body) =>
             handleBrief(
               body,
-              { ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY, ANTHROPIC_MODEL: env.ANTHROPIC_MODEL },
+              {
+                BRIEF_PROVIDER: env.BRIEF_PROVIDER,
+                ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY,
+                ANTHROPIC_MODEL: env.ANTHROPIC_MODEL,
+                OLLAMA_URL: env.OLLAMA_URL,
+                OLLAMA_MODEL: env.OLLAMA_MODEL,
+              },
               fetch,
               req.socket.remoteAddress ?? 'local',
             ),

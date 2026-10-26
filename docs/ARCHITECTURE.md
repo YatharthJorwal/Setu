@@ -158,9 +158,9 @@ Rules: the store is the only owner of worker communication. Derived values (for 
 
 ## 10. LLM brief service
 
-- One endpoint: `POST /api/brief`. The logic is a single framework-agnostic function, `handleBrief`, in `web/src/brief/handler.ts`. Two thin adapters call it: a Vite dev-server route in `web/vite.config.ts` (key from `web/.env.local`) and a Netlify function in `server/brief.mts` (key from the site's environment variables).
+- One endpoint: `POST /api/brief`. The logic is a single framework-agnostic function, `handleBrief`, in `web/src/brief/handler.ts`. Two thin adapters call it: a Vite dev-server route in `web/vite.config.ts` (settings from `web/.env.local`) and a Netlify function in `server/brief.mts` (settings from the site's environment variables). The handler picks the provider: a local Ollama model by default, or the Claude API when a key is set or `BRIEF_PROVIDER=anthropic`.
 - Steps: limit the request size, parse and clean the request (`parseBriefInput`), apply a small per-client rate limit, call the Messages API with a fixed system prompt, extract the JSON object, validate it (`validateBrief`: schema, metric references, and the number check against the input), retry once with the exact problems listed, then return the result or a clear error status.
-- The API key lives in server environment variables only. It is never sent to the browser and never included in any response.
+- A Claude API key, if used, lives in server environment variables only. It is never sent to the browser and never included in any response. With Ollama there is no key and the request never leaves the computer.
 - The browser (`web/src/brief/client.ts`) validates the answer again, and falls back to the rule-based template (`template.ts`) whenever the service is unavailable or the answer is rejected, labelling it as such.
 - Contract: `docs/SPEC.md` section 8.
 

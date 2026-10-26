@@ -50,6 +50,7 @@ export function Dashboard() {
   const scenario = useSceneStore((s) => s.scenario);
   const setSnapshot = useSceneStore((s) => s.setSnapshot);
   const setView = useSceneStore((s) => s.setView);
+  const briefShown = useSceneStore((s) => s.brief.status === 'ready');
 
   if (!graph) return null;
   if (!run || scenario.edge === null) {
@@ -175,7 +176,9 @@ export function Dashboard() {
 
       <BriefPanel />
 
-      <p className="small muted spaced">{t('dash.notCounted', { a: fmtN(m.places_unconnected), b: fmtN(m.places_no_baseline) })}</p>
+      {!briefShown && (
+        <p className="small muted spaced">{t('dash.notCounted', { a: fmtN(m.places_unconnected), b: fmtN(m.places_no_baseline) })}</p>
+      )}
       <p className="small faint">{t('dash.caveat')}</p>
     </aside>
   );

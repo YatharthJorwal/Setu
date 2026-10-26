@@ -39,6 +39,7 @@ export interface BriefState {
 const IDLE_BRIEF: BriefState = { status: 'idle', result: null, input: null };
 /** bumped whenever the scenario changes, so a late answer for an old scenario is dropped */
 let briefToken = 0;
+let missTimer: ReturnType<typeof setTimeout> | undefined;
 
 interface SceneState {
   status: Status;
@@ -147,7 +148,11 @@ export const useSceneStore = create<SceneState>()((set, get) => {
       set({ pickMiss: false });
       recompute({ edge, view: 'after' }, true);
     },
-    reportPickMiss: () => set({ pickMiss: true }),
+    reportPickMiss: () => {
+      set({ pickMiss: true });
+      clearTimeout(missTimer);
+      missTimer = setTimeout(() => set({ pickMiss: false }), 3500);
+    },
     setSeverity: (severity) => recompute({ severity }, true),
     setThreshold: (minutes) => {
       if (Number.isFinite(minutes)) recompute({ tGoldenMin: Math.min(240, Math.max(10, Math.round(minutes))) }, false);

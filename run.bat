@@ -11,6 +11,8 @@ if /i "%CMD%"=="setup" set "FORCE=1"
 if /i "%CMD%"=="help" goto :usage
 if /i "%CMD%"=="-h" goto :usage
 if /i "%CMD%"=="/?" goto :usage
+if /i "%CMD%"=="info" goto :cmd_info
+if /i "%CMD%"=="save" goto :cmd_save
 
 where python >nul 2>nul
 if errorlevel 1 (
@@ -63,6 +65,50 @@ if /i "%CMD%"=="test" goto :cmd_test
 echo [error] Unknown command: %CMD%
 echo.
 goto :usage
+
+:cmd_info
+echo [info] This copy of Setu lives in: %cd%
+git rev-parse --is-inside-work-tree >nul 2>nul
+if errorlevel 1 (
+  echo [info] This folder is not a git repository.
+  goto :eof
+)
+echo [info] Git remote:
+git remote -v
+echo [info] Branch and changes:
+git status -sb
+echo [info] Last commits:
+git log --oneline -5
+if exist "web\src\brief\handler.ts" (echo [info] Has the AI brief code: yes) else (echo [info] Has the AI brief code: NO, this copy is out of date)
+if exist "web\.env.local" (echo [info] Has web\.env.local: yes) else (echo [info] Has web\.env.local: no)
+goto :eof
+
+:cmd_save
+set "MSG=%~2"
+if "%MSG%"=="" set "MSG=chore: save progress"
+echo [save] Saving the repo in: %cd%
+git ls-files --error-unmatch web\.env.local >nul 2>nul
+if not errorlevel 1 (
+  echo [error] web\.env.local is tracked by git, so nothing was saved. Tell me before continuing.
+  goto :fail
+)
+git add -A
+git diff --cached --quiet
+if errorlevel 1 (
+  git commit -m "%MSG%"
+  if errorlevel 1 goto :fail
+) else (
+  echo [save] Nothing new to commit. Pushing any earlier commits.
+)
+git push
+if errorlevel 1 (
+  echo.
+  echo [save] The push was rejected: GitHub has commits this folder does not.
+  echo [save] Run this, then run.bat save again:  git pull --rebase origin main
+  goto :fail
+)
+echo [save] Done.
+goto :eof
 
 :cmd_start
 if not exist "data\raw\dem\*.tif" (
@@ -138,7 +184,7 @@ echo [test] All checks passed.
 goto :eof
 
 :serve
-if not exist "web\.env.local" echo [run] No web\.env.local found, so the situation brief will use its template fallback. See web\.env.example to enable the AI brief.
+echo [run] The AI brief uses a local Ollama model, qwen3.5:4b by default. Start Ollama to enable it, otherwise a labelled template brief is shown.
 echo [run] Starting the app. Press Ctrl+C to stop.
 cd web
 call npm run dev -- --open
@@ -177,6 +223,8 @@ echo   run.bat graph      rebuild the road graph and print the real-data network
 echo   run.bat tiers      write and open the facility review sheet
 echo   run.bat test       run all tests and the type check
 echo   run.bat setup      reinstall the Python and web packages
+echo   run.bat info       show which folder this is, its git state, and whether it is up to date
+echo   run.bat save "msg" commit everything and push, always from this folder
 exit /b 0
 
 :fail
