@@ -4,6 +4,7 @@ import { useEffect, useRef, type ComponentRef } from 'react';
 import { useReducedMotion } from '../lib/useReducedMotion';
 import { useSceneStore } from '../state/store';
 import { Block } from './Block';
+import { CaptureBridge } from './Capture';
 import { FacilityMarkers, Places, SelectedRing } from './Markers';
 import { Roads } from './Roads';
 import { ScenarioOverlay } from './Scenario';
@@ -57,6 +58,7 @@ export function Scene() {
       {layers.places && <Places />}
       <ScenarioOverlay />
       <Controls />
+      <CaptureBridge />
     </Canvas>
   );
 }

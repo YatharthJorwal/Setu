@@ -1,16 +1,9 @@
 import { useState } from 'react';
-import type { BriefLanguage, BriefResult } from '../brief';
-import { t, type Key } from '../lib/i18n';
+import type { BriefLanguage } from '../brief';
+import { t } from '../lib/i18n';
+import { briefSourceNote } from '../state/report';
 import { useSceneStore } from '../state/store';
 import { Segmented } from './Segmented';
-
-const REASON_KEY: Record<NonNullable<BriefResult['reason']>, Key> = {
-  no_key: 'brief.reason.no_key',
-  unreachable: 'brief.reason.unreachable',
-  invalid: 'brief.reason.invalid',
-  language: 'brief.reason.language',
-  error: 'brief.reason.error',
-};
 
 /** The AI situation brief, with a rule-based fallback that is always labelled as such. */
 export function BriefPanel() {
@@ -87,13 +80,7 @@ export function BriefPanel() {
           </ul>
 
           <p className={result.source === 'ai' ? 'source ai' : 'source template'}>
-            {result.source === 'ai'
-              ? result.model
-                ? t(result.provider === 'ollama' ? 'brief.sourceLocal' : 'brief.sourceAi', { model: result.model })
-                : t('brief.sourceAiNoModel')
-              : t('brief.sourceTemplate', { reason: t(REASON_KEY[result.reason ?? 'error']) })}
-            {result.source === 'template' && brief.input?.language === 'hi' ? ` ${t('brief.englishOnly')}` : ''}
-            {result.source === 'template' && result.detail ? ` ${t('brief.detail', { detail: result.detail })}` : ''}
+            {briefSourceNote(result, brief.input?.language)}
           </p>
         </article>
       )}

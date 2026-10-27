@@ -1,24 +1,18 @@
 import { t } from '../lib/i18n';
+import { severityLabel } from '../lib/labels';
 import { STATE_COLORS } from '../lib/palette';
-import { edgeSummary, type SetMetrics } from '../state/sim-api';
+import { describePeople, describeRestored } from '../state/report';
+import { edgeSummary } from '../state/sim-api';
 import { useSceneStore, type MapView } from '../state/store';
 import { AnimatedNumber } from './AnimatedNumber';
 import { BriefPanel } from './BriefPanel';
 import { ConeIcon, RingIcon } from './Icons';
 import { Segmented } from './Segmented';
-import { severityLabel } from './ScenarioPanel';
+import { openReport } from './openReport';
 import { Tag } from './Tag';
 
 const fmtN = (n: number): string => n.toLocaleString('en');
 const round = (v: number | null): number | null => (v === null ? null : Math.round(v));
-
-function peopleText(m: SetMetrics): string {
-  if (m.places_isolated === 0) return '0';
-  const share = m.population.known_share_isolated;
-  if (share === 0) return t('dash.peopleUnknown');
-  if (share < 1) return t('dash.peoplePartial', { n: fmtN(m.population.isolated), pct: Math.round(share * 100) });
-  return fmtN(m.population.isolated);
-}
 
 interface KpiProps {
   label: string;
@@ -68,22 +62,19 @@ export function Dashboard() {
   const m = snap[set];
   const hoursOf = (i: number): number => Math.round((run.snapshots[i].t_s / 3600) * 10) / 10;
 
-  const restored = run.restoredAfter_h[set].filter((h): h is number => h !== null);
-  const restoredText =
-    m.places_isolated === 0 && scenario.snapshot === 0
-      ? null
-      : restored.length === 0
-        ? t('dash.never')
-        : Math.min(...restored) === Math.max(...restored)
-          ? t('dash.restoredOne', { h: Math.min(...restored) })
-          : t('dash.restored', { min: Math.min(...restored), max: Math.max(...restored) });
+  const restoredText = describeRestored(run, set, scenario.snapshot, m);
 
   const noImpact = m.places_isolated === 0 && m.places_delayed === m.places_delayed_before && scenario.snapshot === 0;
 
   return (
     <aside className="dashboard float" aria-label={t('dash.title')}>
       <div key={`${scenario.edge}-${scenario.severity}`} className="fade-in">
-        <div className="eyebrow">{t('dash.title')}</div>
+        <div className="dash-head">
+          <div className="eyebrow">{t('dash.title')}</div>
+          <button type="button" className="btn btn-ghost" title={t('report.hint')} onClick={openReport}>
+            {t('report.open')}
+          </button>
+        </div>
         <h2 className="headline">{summary.name}</h2>
         <div className="chips">
           <span className="chip">{t('dash.headline', { severity: severityLabel(scenario.severity) })}</span>
@@ -143,7 +134,7 @@ export function Dashboard() {
         <>
           <p className="small">
             <span className="muted">{t('dash.people')}: </span>
-            {peopleText(m)}
+            {describePeople(m)}
           </p>
           {restoredText && (
             <p className="small">

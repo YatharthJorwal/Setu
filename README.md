@@ -17,6 +17,7 @@ Built on real terrain and real roads for a valley corridor in Uttarakhand. Tap a
 - Show a before/after comparison, a timeline, and a consequences dashboard
 - Generate a plain-language situation brief from the computed numbers (an LLM narrates; it never computes)
 - Show every dataset, licence, and modelled assumption in-app
+- Open a printable report of any scenario, to print or save as PDF
 
 ## Documents
 

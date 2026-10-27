@@ -1,25 +1,15 @@
-import { t, type Key } from '../lib/i18n';
+import { t } from '../lib/i18n';
+import { severityLabel } from '../lib/labels';
 import {
   ASSUMPTIONS,
   SEVERITIES,
   clearanceHours,
   edgeSummary,
-  type Severity,
   type TargetSet,
 } from '../state/sim-api';
 import { useSceneStore } from '../state/store';
 import { Segmented } from './Segmented';
 import { Tag } from './Tag';
-
-const SEVERITY_KEY: Record<Severity, Key> = {
-  minor: 'scenario.severity.minor',
-  major: 'scenario.severity.major',
-  severe: 'scenario.severity.severe',
-};
-
-export function severityLabel(s: Severity): string {
-  return t(SEVERITY_KEY[s]);
-}
 
 function AssumptionsList() {
   const bases = [...new Set(ASSUMPTIONS.map((a) => a.basis))];

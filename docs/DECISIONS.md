@@ -146,3 +146,15 @@ Decision:
 - Three measures for the small model: schema-constrained output with `metric_refs` limited to real keys; an explicit list of the numbers it may write in every request; one worked example in its system prompt. The number check, one correction retry and the labelled template fallback still apply, so a failing model costs a few seconds, never a wrong number.
 - Errors are explained to the person: Ollama not running, or the model not pulled (with the exact `ollama pull` command), appear under the template brief.
 Consequences: No key, no cost, works offline. Quality is lower than a large model, and Hindi in particular needs a Hindi speaker's review before anyone relies on it; `OLLAMA_MODEL=qwen3.5:9b` is the first thing to try if quality or number discipline disappoints. A hosted deployment cannot reach a model on the author's computer, so a public link would show the template fallback unless the Claude API is configured. Not yet tried by the author against a real Ollama, so exact behaviour of the `think` and `format` fields on this build is unconfirmed.
+
+## ADR-015: The report is a self-contained printable page
+Date: 2026-10-26
+Status: Accepted
+Context: The project needs an after-action report to attach to a submission or hand to an officer, without adding a PDF library or a server.
+Decision:
+- The report is one complete HTML page built from plain data by a pure function (`web/src/report/buildReport.ts`), opened in a new tab through a Blob URL. The browser's print dialog produces the PDF. The page carries A4 print rules, and the instruction to press Ctrl+P is hidden on paper.
+- A Blob page shares the app's origin, so it is locked down: a content-security policy forbids scripts and all outside requests, every value is HTML-escaped (place and road names come from open map data), and the only image allowed is an inline JPEG or PNG data URL.
+- The map picture is taken by drawing one frame and reading the canvas back in the same step, through a small bridge registered by the 3D view.
+- The page includes the run record, so a reader can see exactly what inputs and seed produced the numbers.
+- If the new tab is blocked, the same page is offered as a file download.
+Consequences: No new dependency, works offline. Page breaks and the browser's own header and footer lines in the print dialog are not controlled by the page: turn off "Headers and footers" in the print options for a clean copy. The map picture depends on the browser allowing canvas readback, and falls back to no picture if it does not.

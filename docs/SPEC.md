@@ -128,6 +128,10 @@ Every metric shown in the UI carries a unit and either a data-source tag or an a
 5. Read the dashboard. Toggle before/after to see what changed.
 6. Generate the brief. Export the report.
 
+### Report
+
+The dashboard has an "Open report" button. It opens a printable page for the current scenario in a new tab, to print or save as PDF with Ctrl+P. The report holds: a picture of the map as it is now, the scenario and its assumed values, the before and after results with each number tagged as data or assumption, the most affected places, the situation brief if one has been written (labelled AI or template, and where it ran), every assumption, every data source with its known gaps, the "not an operational warning system" notice, and the run record (simulator version, seed, inputs), so the same results can be reproduced. If a pop-up blocker stops the new tab, the page downloads as an HTML file instead.
+
 ### Interaction rules
 
 - Camera: orbit with constrained pitch and zoom. Reset-view control always visible.
