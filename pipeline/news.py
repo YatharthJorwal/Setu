@@ -5,7 +5,8 @@ Usage:  python -m pipeline.news
 Writes data/processed/news.json. Run by the scheduled GitHub Actions job (every few hours) so the hosted
 site stays current, and by hand with `run.bat news`. Headlines and image links come from the GDELT Project
 (gdeltproject.org); each item links to its publisher. A failed fetch never stops a build: the file is written
-with an `error` note and the app says news is unavailable.
+with an `error` note and the app says news is unavailable. When some queries fail, headlines already in the file
+are kept (still within the age limit) so a bad run never leaves the card emptier than it was.
 """
 
 from __future__ import annotations
@@ -25,6 +26,10 @@ PROCESSED = ROOT / "data" / "processed"
 GDELT_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
 USER_AGENT = "Setu-news/0.1 (https://github.com/YatharthJorwal/Setu)"
 MIN_GAP_S = 6.0  # GDELT asks for at most one request every 5 seconds
+TIMEOUT_S = 60  # GDELT is often slow; a short timeout was losing queries
+ATTEMPTS = 4  # tries per query for timeouts, dropped connections, rate limits and server errors
+ROUNDS = 2  # a second pass for queries that still failed, after RETRY_WAIT_S
+RETRY_WAIT_S = 20.0
 MAX_AGE_DAYS = 30
 MAX_ARTICLES = 16
 SOURCE_NOTE = "Headlines and images found through the GDELT Project (gdeltproject.org). Each item links to its publisher."
@@ -137,7 +142,17 @@ def build_news(responses: list[dict], now: datetime) -> dict:
                     "tags": tags,
                 }
             )
-    found.sort(key=lambda x: x["published"], reverse=True)
+    return {
+        "version": 1,
+        "updated": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "source": SOURCE_NOTE,
+        "articles": _newest_unique(found),
+    }
+
+
+def _newest_unique(found: list[dict]) -> list[dict]:
+    """Newest first, one item per headline and per link, at most MAX_ARTICLES."""
+    found = sorted(found, key=lambda x: x["published"], reverse=True)
     seen_keys: set[str] = set()
     seen_urls: set[str] = set()
     out: list[dict] = []
@@ -150,49 +165,100 @@ def build_news(responses: list[dict], now: datetime) -> dict:
         out.append(item)
         if len(out) >= MAX_ARTICLES:
             break
-    return {
-        "version": 1,
-        "updated": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "source": SOURCE_NOTE,
-        "articles": out,
-    }
+    return out
+
+
+def load_previous(path) -> list[dict]:
+    """Articles from an earlier news.json, or [] if there is none or it cannot be read."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    items = data.get("articles") if isinstance(data, dict) else None
+    if not isinstance(items, list):
+        return []
+    return [
+        a for a in items
+        if isinstance(a, dict) and a.get("title") and str(a.get("url", "")).startswith(("http://", "https://")) and a.get("published")
+    ]
+
+
+def merge_previous(result: dict, previous: list[dict], now: datetime) -> dict:
+    """Add earlier headlines that are still recent to a result that came from a partly failed run."""
+    cutoff = now - timedelta(days=MAX_AGE_DAYS)
+    keep = []
+    for a in previous:
+        try:
+            when = datetime.strptime(a["published"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        except (ValueError, TypeError):
+            continue
+        if cutoff <= when <= now + timedelta(days=1):
+            keep.append(a)
+    return {**result, "articles": _newest_unique([*result["articles"], *keep])}
 
 
 def fetch_query(query: str, get=requests.get, sleep=time.sleep) -> dict:
-    """One GDELT request. Retries politely when told to slow down. Returns {} when there is nothing."""
+    """One GDELT request. Retries politely on rate limits, timeouts, dropped connections and server errors.
+
+    Returns {} when there is nothing. Raises RuntimeError saying WHY when it gives up, so the log shows the real cause.
+    """
     params = {"query": query, "mode": "artlist", "format": "json", "maxrecords": 75, "timespan": "30d", "sort": "datedesc"}
-    for attempt in range(3):
-        r = get(GDELT_URL, params=params, headers={"User-Agent": USER_AGENT}, timeout=40)
-        body = (r.text or "").strip()
-        if r.status_code == 200 and body.startswith("{"):
-            return r.json()
-        if r.status_code == 200 and body == "":
-            return {}
-        if r.status_code == 429 or "limit" in body[:200].lower():
-            sleep(MIN_GAP_S * (attempt + 2))
-            continue
-        break
-    raise RuntimeError(f"GDELT did not return usable data (HTTP {r.status_code})")
+    why = "no attempt made"
+    for attempt in range(ATTEMPTS):
+        wait = MIN_GAP_S * (attempt + 2)
+        try:
+            r = get(GDELT_URL, params=params, headers={"User-Agent": USER_AGENT}, timeout=TIMEOUT_S)
+        except requests.RequestException as exc:  # timeout, connection reset, DNS, TLS
+            why = type(exc).__name__
+        else:
+            body = (r.text or "").strip()
+            if r.status_code == 200 and body.startswith("{"):
+                try:
+                    return r.json()
+                except ValueError:
+                    why = "reply was cut off"  # retry: GDELT sometimes drops the connection mid-answer
+            elif r.status_code == 200 and body == "":
+                return {}
+            elif r.status_code == 429 or "limit" in body[:200].lower():
+                why = "rate limited"
+            elif r.status_code >= 500:
+                why = f"HTTP {r.status_code}"
+            else:  # GDELT answers a query it dislikes with plain text; retrying will not change that
+                raise RuntimeError(f"GDELT did not return usable data (HTTP {r.status_code}: {body[:120]})")
+        if attempt < ATTEMPTS - 1:
+            sleep(wait)
+    raise RuntimeError(f"GDELT did not return usable data ({why}, {ATTEMPTS} tries)")
 
 
 def main() -> None:
     now = datetime.now(timezone.utc)
-    responses: list[dict] = []
-    errors: list[str] = []
-    for i, q in enumerate(QUERIES):
-        if i:
-            time.sleep(MIN_GAP_S)
-        try:
-            responses.append(fetch_query(q))
-        except Exception as exc:  # noqa: BLE001 - one failed query must not lose the others
-            errors.append(str(exc))
-    result = build_news(responses, now)
-    if errors:
-        result["error"] = "; ".join(errors)[:300]
+    responses: dict[int, dict] = {}
+    errors: dict[int, str] = {}
+    for round_no in range(ROUNDS):
+        todo = [i for i in range(len(QUERIES)) if i not in responses]
+        if not todo:
+            break
+        if round_no:
+            print(f"  {len(todo)} of {len(QUERIES)} queries failed; trying them again in {RETRY_WAIT_S:.0f} seconds")
+            time.sleep(RETRY_WAIT_S)
+        for n, i in enumerate(todo):
+            if n:
+                time.sleep(MIN_GAP_S)
+            try:
+                responses[i] = fetch_query(QUERIES[i])
+                errors.pop(i, None)
+            except Exception as exc:  # noqa: BLE001 - one failed query must not lose the others
+                errors[i] = f"query {i + 1}: {exc}"
+    result = build_news([responses[i] for i in sorted(responses)], now)
     PROCESSED.mkdir(parents=True, exist_ok=True)
     out = PROCESSED / "news.json"
+    if errors:
+        result = merge_previous(result, load_previous(out), now)
+        result["error"] = "; ".join(errors[i] for i in sorted(errors))[:300]
     out.write_text(json.dumps(result, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"news.json: {len(result['articles'])} articles ({len(errors)} of {len(QUERIES)} queries failed)")
+    for msg in (errors[i] for i in sorted(errors)):
+        print(f"  FAILED {msg}")
     for item in result["articles"][:5]:
         print(f"  {item['published'][:10]}  {item['source']}: {item['title'][:80]}")
 

@@ -161,7 +161,7 @@ if not "%GRAPH_RC%"=="0" goto :fail
 goto :eof
 
 :cmd_news
-echo [news] Fetching recent headlines. This takes about 20 seconds.
+echo [news] Fetching recent headlines. About 20 seconds, up to a couple of minutes if the news service is slow.
 "%PY%" -m pipeline.news
 if errorlevel 1 goto :fail
 pushd web
@@ -171,7 +171,7 @@ echo [news] Done. Use Refresh in the app, or start it with run.bat
 goto :eof
 
 :cmd_population
-echo [population] Estimating how many people live at each village. Reading the corridor from the WorldPop grid can take a few minutes.
+echo [population] Estimating how many people live at each village. The first run downloads the WorldPop grid (large, a few minutes) into data\raw\worldpop; later runs reuse it.
 if "%~2"=="" ("%PY%" -m pipeline.population) else ("%PY%" -m pipeline.population --raster "%~2")
 if errorlevel 1 goto :fail
 call :build_graph
