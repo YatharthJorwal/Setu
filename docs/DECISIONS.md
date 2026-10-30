@@ -195,3 +195,20 @@ Decision:
 - Population: a URL source is downloaded once into `data/raw/worldpop/` (git-ignored, like all raw data), checked to be a real GeoTIFF, then the corridor is read from disk. A partial download is resumed when the server allows it, otherwise restarted; the final file only appears once complete. If the host fails, a second WorldPop host is tried (UNVERIFIED: that address has not been checked from here), and if that fails too the message says which file to download by hand and how to pass it (`run.bat population "C:\path\file.tif"`). The allocation method and outputs are unchanged.
 - News: each query is retried on rate limits, timeouts, dropped connections, server errors and cut-off replies (4 tries, growing waits); queries that still fail get a second pass after 20 seconds. The reason for every failure is printed and stored in the `error` field. When a run is partial, headlines already in `news.json` that are within 30 days are kept, so a bad run never leaves the card emptier than before. A query GDELT rejects outright is reported and not retried.
 Consequences: The first population run needs the download (size UNVERIFIED, expect hundreds of MB) and disk space under `data/raw`; later runs are fast and work offline. `run.bat news` can now take a couple of minutes in the worst case. Neither fix has been run against the live services from the build environment (both hosts were blocked there); they are covered by offline tests with a fake server and need one run on the author's machine.
+
+## ADR-020: What the hosted site contains; no news on it
+Date: 2026-10-31
+Status: Accepted (amends ADR-017)
+Context: The submission is the live GitHub Pages site, not a recording. A hosted static page cannot run a model. The news job ran from a shared GitHub address that GDELT rate-limits readily (it did so from the author's own computer on 2026-10-30 and again on 2026-10-31, taking minutes per run), so news on the site would be slow to build and often missing.
+Decision:
+- The hosted site is the static build of `web/` with the processed data in `data/processed` (about 3 MB). It has the 3D corridor, landslide scenarios, dashboard, before/after, timeline, population estimate and printable report. It does NOT have: the AI-written brief (the labelled template is shown instead, ADR-018), any news (the card is hidden in production builds; `VITE_NEWS=on` shows it), the data pipeline, or the raw downloads (OSM extracts, the 531 MB WorldPop grid, DEM tiles), which stay in `data/raw` and are never committed.
+- The deploy workflow no longer fetches news and no longer runs every three hours (that schedule existed only for news). `run.bat news` and `pipeline/news.py` remain for local use.
+Consequences: Faster, deterministic deploys with no dependence on GDELT. The news card still shows in local development. README lists what is not built (flash flood, agents, curated tiers).
+
+## ADR-021: News asks GDELT one question; Ctrl+C is safe
+Date: 2026-10-31
+Status: Accepted
+Context: On 2026-10-30 and 31, two of the three GDELT queries failed on every run (the Uttarakhand-wide roads and weather query repeatedly, the Hindi one often), from the author's own computer, and the waits and retries made `run.bat news` take minutes. The first query, about the corridor's own places, always worked. The submission deadline is 2026-10-31.
+Decision: `pipeline/news.py` keeps only the corridor query. The headline filters still understand Hindi and region-wide items, and a query for them can be added back to `QUERIES` once GDELT behaves. Each query and each wait is printed, so the terminal never looks frozen, and Ctrl+C keeps whatever is already on file: if nothing has arrived the file is not touched; if some headlines arrived they are saved together with the earlier ones and the `error` note says the run was stopped.
+Consequences: News is only headlines that name the corridor's places; Uttarakhand-wide road and weather stories and Hindi headlines are not fetched. The feature is unchanged for the reader: the same card, filters, links and refresh. The removed queries are in git history (commit 9d3b832 and earlier).
+

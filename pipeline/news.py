@@ -29,7 +29,8 @@ MIN_GAP_S = 6.0  # GDELT asks for at most one request every 5 seconds
 TIMEOUT_S = 60  # GDELT is often slow; a short timeout was losing queries
 ATTEMPTS = 4  # tries per query for timeouts, dropped connections, rate limits and server errors
 ROUNDS = 2  # a second pass for queries that still failed, after RETRY_WAIT_S
-RETRY_WAIT_S = 20.0
+RETRY_WAIT_S = 45.0
+RATE_LIMIT_WAIT_S = 30.0  # GDELT limits shared addresses (GitHub runners, offices) hard; short waits just get limited again
 MAX_AGE_DAYS = 30
 MAX_ARTICLES = 16
 SOURCE_NOTE = "Headlines and images found through the GDELT Project (gdeltproject.org). Each item links to its publisher."
@@ -37,10 +38,10 @@ SOURCE_NOTE = "Headlines and images found through the GDELT Project (gdeltprojec
 QUERIES = [
     '("Rudraprayag" OR "Kedarnath" OR "Guptkashi" OR "Ukhimath" OR "Agastmuni" OR "Karnaprayag" OR "Sonprayag" '
     'OR "Gaurikund" OR "Chopta" OR "Tungnath" OR "Mandakini") sourcelang:english',
-    '("Uttarakhand" OR "Garhwal") (landslide OR cloudburst OR "road blocked" OR highway OR flood OR "heavy rain" '
-    'OR "Char Dham") sourcelang:english',
-    "(रुद्रप्रयाग OR केदारनाथ OR गुप्तकाशी OR ऊखीमठ OR अगस्त्यमुनि OR कर्णप्रयाग OR सोनप्रयाग) sourcelang:hindi",
 ]
+# Two more queries (Uttarakhand-wide roads and weather, and a Hindi one) were removed on 2026-10-31: they kept failing
+# against GDELT's limits and made every run take minutes (docs/DECISIONS.md ADR-021). The headline filters still handle
+# Hindi and region-wide items if a query for them is added back here.
 
 # Words that tie a headline to the corridor itself ...
 AREA = [
@@ -221,11 +222,13 @@ def fetch_query(query: str, get=requests.get, sleep=time.sleep) -> dict:
                 return {}
             elif r.status_code == 429 or "limit" in body[:200].lower():
                 why = "rate limited"
+                wait = RATE_LIMIT_WAIT_S * (attempt + 1)
             elif r.status_code >= 500:
                 why = f"HTTP {r.status_code}"
             else:  # GDELT answers a query it dislikes with plain text; retrying will not change that
                 raise RuntimeError(f"GDELT did not return usable data (HTTP {r.status_code}: {body[:120]})")
         if attempt < ATTEMPTS - 1:
+            print(f"  GDELT is busy ({why}); waiting {wait:.0f} s before trying again (Ctrl+C keeps what is on file)", flush=True)
             sleep(wait)
     raise RuntimeError(f"GDELT did not return usable data ({why}, {ATTEMPTS} tries)")
 
@@ -234,27 +237,35 @@ def main() -> None:
     now = datetime.now(timezone.utc)
     responses: dict[int, dict] = {}
     errors: dict[int, str] = {}
-    for round_no in range(ROUNDS):
-        todo = [i for i in range(len(QUERIES)) if i not in responses]
-        if not todo:
-            break
-        if round_no:
-            print(f"  {len(todo)} of {len(QUERIES)} queries failed; trying them again in {RETRY_WAIT_S:.0f} seconds")
-            time.sleep(RETRY_WAIT_S)
-        for n, i in enumerate(todo):
-            if n:
-                time.sleep(MIN_GAP_S)
-            try:
-                responses[i] = fetch_query(QUERIES[i])
-                errors.pop(i, None)
-            except Exception as exc:  # noqa: BLE001 - one failed query must not lose the others
-                errors[i] = f"query {i + 1}: {exc}"
+    stopped = False
+    try:
+        for round_no in range(ROUNDS):
+            todo = [i for i in range(len(QUERIES)) if i not in responses]
+            if not todo:
+                break
+            if round_no:
+                print(f"  {len(todo)} of {len(QUERIES)} queries failed; trying them again in {RETRY_WAIT_S:.0f} seconds (Ctrl+C keeps what is on file)", flush=True)
+                time.sleep(RETRY_WAIT_S)
+            for n, i in enumerate(todo):
+                if n:
+                    time.sleep(MIN_GAP_S)
+                print(f"  asking GDELT, query {i + 1} of {len(QUERIES)}", flush=True)
+                try:
+                    responses[i] = fetch_query(QUERIES[i])
+                    errors.pop(i, None)
+                except Exception as exc:  # noqa: BLE001 - one failed query must not lose the others
+                    errors[i] = f"query {i + 1}: {exc}"
+    except KeyboardInterrupt:  # the person got tired of waiting: keep whatever arrived, never write a broken file
+        stopped = True
+        print("\n  Stopped. Keeping the headlines already on file.")
+        if not responses:
+            return
     result = build_news([responses[i] for i in sorted(responses)], now)
     PROCESSED.mkdir(parents=True, exist_ok=True)
     out = PROCESSED / "news.json"
-    if errors:
+    if errors or stopped:
         result = merge_previous(result, load_previous(out), now)
-        result["error"] = "; ".join(errors[i] for i in sorted(errors))[:300]
+        result["error"] = "; ".join([errors[i] for i in sorted(errors)] + (["stopped before every query finished"] if stopped else []))[:300]
     out.write_text(json.dumps(result, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"news.json: {len(result['articles'])} articles ({len(errors)} of {len(QUERIES)} queries failed)")
     for msg in (errors[i] for i in sorted(errors)):

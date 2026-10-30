@@ -4,20 +4,30 @@
 
 Built on real terrain and real roads for a valley corridor in Uttarakhand. Tap a road, trigger a landslide, and watch the network break.
 
-> **Status:** pre-alpha. This repository currently holds the project documents and an empty scaffold. Built for the SCERT Uttarakhand Hackathon 3.0.
+> **Status:** working prototype for one real corridor (Rudraprayag, Uttarakhand), built for the SCERT Uttarakhand Hackathon 3.0.
+>
+> **Live site:** https://yatharthjorwal.github.io/Setu/ (the AI-written brief needs a local model and is shown as a labelled template on the hosted copy)
 
 > **Disclaimer:** Setu is an illustrative simulator. It is not an operational warning system, does not forecast events, and is not affiliated with any government body. Modelled values are labelled as assumptions in the app.
 
-## What it will do
+## What it does today
 
 - Render a real Uttarakhand valley corridor in 3D (terrain, roads, villages, health facilities)
-- Let you trigger a scenario by tapping the map: a landslide on a road segment (v1); a flash flood at a point (stretch)
-- Simulate people and ambulances moving across the surviving road network
+- Let you trigger a landslide by tapping a road, with a chosen severity
+- Re-route every village over the surviving road network and rank the single most critical road segments
 - Compute, per village: access time to the nearest working clinic, whether it is isolated, how long, and how many people are affected
 - Show a before/after comparison, a timeline, and a consequences dashboard
 - Generate a plain-language situation brief from the computed numbers (an LLM narrates; it never computes)
 - Show every dataset, licence, and modelled assumption in-app
 - Open a printable report of any scenario, to print or save as PDF
+- Show a modelled population estimate (WorldPop 2020); a local-news card is available when running locally
+
+## Not built yet
+
+- A flash-flood scenario
+- People and ambulances moving across the network (agents)
+- Curated facility tiers: all 71 facilities are still name-based guesses (see `docs/DECISIONS.md` ADR-008)
+- Validation of travel speeds and clearance times with local officials
 
 ## Documents
 
@@ -71,16 +81,16 @@ Work in one folder only. Copies of this repo unpacked elsewhere (for example in 
 
 ```
 run.bat population      # estimates people per village from WorldPop (reads only the corridor), then rebuilds the graph
-run.bat news            # fetches fresh local headlines for the news card
+run.bat news            # optional, local only: fetches local headlines for the news card (slow; GDELT often rate-limits)
 ```
 
-The top bar shows how many people live in the corridor and how many the current scenario cuts off. These are modelled estimates, labelled as such. The news card lists recent headlines about the area with a filter; on the hosted site a scheduled job refreshes them every three hours.
+The top bar shows how many people live in the corridor and how many the current scenario cuts off. These are modelled estimates, labelled as such. The news card is shown only when running locally; the hosted site does not carry news.
 
 ### Hosting on GitHub Pages
 
 1. In the repository: Settings > Pages > Build and deployment > Source: **GitHub Actions**.
 2. Commit the processed map files (`data/processed`, including `graph.json`) and `web/package-lock.json`: the build needs them.
-3. Push to `main`. The workflow in `.github/workflows/pages.yml` builds the site and publishes it at `https://<your-user>.github.io/Setu/`. It also runs every three hours to refresh the news, and can be started from the Actions tab.
+3. Push to `main`. The workflow in `.github/workflows/pages.yml` builds the site and publishes it at `https://<your-user>.github.io/Setu/`. It can also be started from the Actions tab.
 
 The AI situation brief runs only on a local model, so on the hosted site it shows the labelled rule-based summary.
 

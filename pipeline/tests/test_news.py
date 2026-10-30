@@ -138,6 +138,13 @@ class FetchTests(unittest.TestCase):
         with mock.patch.object(news, "ATTEMPTS", 5):  # four failures, then the good reply
             self.assertEqual(fetch_query("q", get=get, sleep=lambda s: None), {"articles": []})
 
+    def test_rate_limits_are_waited_out_for_longer_each_time(self):
+        slept = []
+        replies = iter([self.Resp(429, "limit"), self.Resp(429, "limit"), self.Resp(200, '{"articles": []}', {"articles": []})])
+        fetch_query("q", get=lambda *a, **k: next(replies), sleep=slept.append)
+        self.assertEqual(slept, [news.RATE_LIMIT_WAIT_S, news.RATE_LIMIT_WAIT_S * 2])
+        self.assertGreaterEqual(news.RATE_LIMIT_WAIT_S, 30)
+
     def test_giving_up_says_why(self):
         with self.assertRaises(RuntimeError) as cm:
             fetch_query("q", get=lambda *a, **k: (_ for _ in ()).throw(requests.Timeout("slow")), sleep=lambda s: None)
@@ -191,7 +198,7 @@ class MainTests(unittest.TestCase):
 
     def run_main(self, folder, answers):
         with mock.patch.object(news, "PROCESSED", Path(folder)), mock.patch.object(news.time, "sleep", lambda s: None), \
-                mock.patch.object(news, "fetch_query", side_effect=answers):
+                mock.patch.object(news, "QUERIES", ["a", "b", "c"]), mock.patch.object(news, "fetch_query", side_effect=answers):
             news.main()
         return json.loads((Path(folder) / "news.json").read_text(encoding="utf-8"))
 
@@ -203,6 +210,23 @@ class MainTests(unittest.TestCase):
             out = self.run_main(d, [good, RuntimeError("x"), RuntimeError("y"), {"articles": []}, {"articles": []}])
         self.assertNotIn("error", out)
         self.assertEqual(len(out["articles"]), 1)
+
+    def test_ctrl_c_before_anything_arrives_leaves_the_file_exactly_as_it_was(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "news.json"
+            path.write_text('{"articles": ["untouched"]}', encoding="utf-8")
+            with mock.patch.object(news, "PROCESSED", Path(d)), mock.patch.object(news, "fetch_query", side_effect=KeyboardInterrupt):
+                news.main()
+            self.assertEqual(path.read_text(encoding="utf-8"), '{"articles": ["untouched"]}')
+
+    def test_ctrl_c_after_some_headlines_arrived_saves_them_with_the_old_ones(self):
+        good = {"articles": [art("Landslide blocks Rudraprayag highway", seen="20261027T080000Z")]}
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(news, "datetime", wraps=datetime) as dt:
+            dt.now.return_value = NOW
+            (Path(d) / "news.json").write_text(json.dumps({"articles": [item("Older Kedarnath yatra headline", "2026-10-20T00:00:00Z")]}), encoding="utf-8")
+            out = self.run_main(d, [good, KeyboardInterrupt()])
+        self.assertEqual({a["title"] for a in out["articles"]}, {"Landslide blocks Rudraprayag highway", "Older Kedarnath yatra headline"})
+        self.assertIn("stopped", out["error"])
 
     def test_a_partly_failed_run_keeps_the_headlines_already_on_file_and_says_what_failed(self):
         good = {"articles": [art("Landslide blocks Rudraprayag highway", seen="20261027T080000Z")]}
