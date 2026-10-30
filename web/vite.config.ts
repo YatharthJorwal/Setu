@@ -57,5 +57,7 @@ function briefApi(env: Record<string, string>): Plugin {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), ''); // web/.env, web/.env.local and the shell environment
-  return { plugins: [react(), briefApi(env)] };
+  // GitHub Pages serves a project site from /<repository>/. Set VITE_BASE to change it.
+  const base = env.VITE_BASE ?? (mode === 'production' ? '/Setu/' : '/');
+  return { base, plugins: [react(), briefApi(env)] };
 });

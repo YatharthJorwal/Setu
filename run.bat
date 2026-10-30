@@ -61,6 +61,8 @@ if /i "%CMD%"=="refetch" goto :cmd_refetch
 if /i "%CMD%"=="audit" goto :cmd_audit
 if /i "%CMD%"=="graph" goto :cmd_graph
 if /i "%CMD%"=="tiers" goto :cmd_tiers
+if /i "%CMD%"=="news" goto :cmd_news
+if /i "%CMD%"=="population" goto :cmd_population
 if /i "%CMD%"=="test" goto :cmd_test
 echo [error] Unknown command: %CMD%
 echo.
@@ -158,6 +160,25 @@ popd
 if not "%GRAPH_RC%"=="0" goto :fail
 goto :eof
 
+:cmd_news
+echo [news] Fetching recent headlines. This takes about 20 seconds.
+"%PY%" -m pipeline.news
+if errorlevel 1 goto :fail
+pushd web
+node scripts\sync-data.mjs
+popd
+echo [news] Done. Use Refresh in the app, or start it with run.bat
+goto :eof
+
+:cmd_population
+echo [population] Estimating how many people live at each village. Reading the corridor from the WorldPop grid can take a few minutes.
+if "%~2"=="" ("%PY%" -m pipeline.population) else ("%PY%" -m pipeline.population --raster "%~2")
+if errorlevel 1 goto :fail
+call :build_graph
+if errorlevel 1 goto :fail
+echo [population] Done. Start the app with run.bat and check the numbers at the top.
+goto :eof
+
 :cmd_tiers
 echo [tiers] Writing the facility review sheet. Existing edits are kept.
 "%PY%" -m pipeline.build_graph --area %AREA% --write-tier-template
@@ -221,6 +242,8 @@ echo   run.bat refetch    download fresh OSM and terrain data, rebuild, then sta
 echo   run.bat audit      run the data audit and print the summary
 echo   run.bat graph      rebuild the road graph and print the real-data network report
 echo   run.bat tiers      write and open the facility review sheet
+echo   run.bat news       fetch fresh local headlines for the news card
+echo   run.bat population estimate people per village from WorldPop, then rebuild the graph
 echo   run.bat test       run all tests and the type check
 echo   run.bat setup      reinstall the Python and web packages
 echo   run.bat info       show which folder this is, its git state, and whether it is up to date

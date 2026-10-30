@@ -128,6 +128,14 @@ Every metric shown in the UI carries a unit and either a data-source tag or an a
 5. Read the dashboard. Toggle before/after to see what changed.
 6. Generate the brief. Export the report.
 
+### Population
+
+The top bar always shows how many people live in the corridor and, once a scenario runs, how many that scenario cuts off, with the share of the corridor. Population comes from a gridded dataset (WorldPop 2020) shared out to villages by proximity, so every figure is a modelled estimate: shown with an approximate sign, rounded (nearest 10, 100 or 1,000 depending on size), and tagged as an estimate. People living off any drivable road, or in places with no route to care even before an event, cannot be analysed; the bar says how many they are. If no population has been loaded the bar says so and says how to load it, and never shows zero.
+
+### News
+
+A card in the left rail lists recent headlines about the area, each with its publisher's picture, source and age, and a filter (All, Local, Roads, Weather, Health). A headline counts as Local when it names a place in the corridor; a headline about Uttarakhand as a whole appears only if it is also about roads, weather or health. Headlines are found through the GDELT Project, kept if relevant, de-duplicated, and written to a file by a scheduled job every three hours; the page re-reads that file every 15 minutes and on Refresh. Headlines and images belong to their publishers and link to them.
+
 ### Report
 
 The dashboard has an "Open report" button. It opens a printable page for the current scenario in a new tab, to print or save as PDF with Ctrl+P. The report holds: a picture of the map as it is now, the scenario and its assumed values, the before and after results with each number tagged as data or assumption, the most affected places, the situation brief if one has been written (labelled AI or template, and where it ran), every assumption, every data source with its known gaps, the "not an operational warning system" notice, and the run record (simulator version, seed, inputs), so the same results can be reproduced. If a pop-up blocker stops the new tab, the page downloads as an HTML file instead.
@@ -174,6 +182,7 @@ Rules:
 - **Two providers, same checks.** The brief is written either by a local model through Ollama (the default, no key and no data leaves the computer) or by the Claude API. With nothing configured it tries Ollama, using `qwen3.5:4b`. `BRIEF_PROVIDER`, `OLLAMA_MODEL`, `OLLAMA_URL`, `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` change that. Whichever writes it, the answer goes through the same validation, retry and fallback.
 - **Ollama request:** `POST /api/chat` with `stream: false`, `think: false`, a JSON-schema `format` (so the shape is enforced while the model writes, and `metric_refs` can only be keys that exist in the input), low temperature, and a fixed context size. The prompt gives a small model a worked example and an explicit list of the numbers it may write.
 - **Claude request:** no `temperature`, no assistant prefill, no forced tool choice and no thinking settings, because the current models reject them. The default model is `claude-haiku-5-5`. `max_tokens` is generous because thinking shares it with the reply.
+- The brief is marked "Local AI only" in the interface. When the model cannot be reached the interface says so plainly and shows the labelled template: on a computer where Ollama is not running it says to start it; on a hosted copy it says there is no local model.
 - A hosted copy of the app cannot reach a model running on someone's own computer. For a public demo link, either run it locally, use the Claude API with a spending limit, or accept the labelled template fallback.
 
 ## 9. Honesty requirements

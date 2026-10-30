@@ -134,7 +134,7 @@ export function Dashboard() {
         <>
           <p className="small">
             <span className="muted">{t('dash.people')}: </span>
-            {describePeople(m)}
+            {describePeople(m, graph.populationSource?.kind === 'modelled')}
           </p>
           {restoredText && (
             <p className="small">

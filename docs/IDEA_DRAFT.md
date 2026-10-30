@@ -46,6 +46,7 @@ In the prototype, closing the first stretch of NH107 out of Rudraprayag leaves 1
 
 - Network analysis on real roads and terrain: closures change the road graph, and shortest-path routing from every qualifying facility gives access times for all villages. This is deterministic and tested.
 - Real-terrain 3D visualisation (WebGL), so officers and communities can see why a valley is vulnerable.
+- A population bar that always shows how many people live in the corridor and how many the chosen closure cuts off (a modelled WorldPop estimate, labelled as such), and a live, filterable feed of local news with pictures, refreshed automatically.
 - A language model writes a plain-language situation brief in English or Hindi from the computed numbers. It runs locally through Ollama, so nothing leaves the computer and no paid service is needed. It never calculates or invents figures: a validation step rejects any number that is not in the simulation output, asks the model to correct itself once, and otherwise shows a clearly labelled rule-based summary.
 - A one-click printable report records the scenario, results, brief, assumptions, data sources, known gaps, and the inputs needed to reproduce the run.
 
@@ -72,4 +73,5 @@ Travel speeds and clearance times are assumptions, labelled as such everywhere i
 - [ ] Match to the portal's fields and length limits
 - [ ] Re-check the two public statistics against their original sources
 - [ ] Add two or three screenshots if the form allows attachments
+- [ ] Run the population step first, then quote the cut-off population as "about N people (modelled estimate)"
 - [ ] Say whether the numbers for NH107 should be kept, or removed until the facility tiers are curated

@@ -1,4 +1,5 @@
 import type { BriefResult } from '../brief';
+import { formatPeople } from '../lib/format';
 import { t, type Key } from '../lib/i18n';
 import { destinationLabel, severityLabel } from '../lib/labels';
 import type { ProvenanceEntry } from '../lib/types';
@@ -10,12 +11,12 @@ const fmtN = (n: number): string => n.toLocaleString('en');
 const minutes = (v: number | null): string => (v === null ? '-' : String(Math.round(v)));
 
 /** How many people are cut off, said honestly: unknown, partly known, or known. */
-export function describePeople(m: SetMetrics): string {
+export function describePeople(m: SetMetrics, approx = false): string {
   if (m.places_isolated === 0) return '0';
   const share = m.population.known_share_isolated;
   if (share === 0) return t('dash.peopleUnknown');
-  if (share < 1) return t('dash.peoplePartial', { n: fmtN(m.population.isolated), pct: Math.round(share * 100) });
-  return fmtN(m.population.isolated);
+  if (share < 1) return t('dash.peoplePartial', { n: formatPeople(m.population.isolated, approx), pct: Math.round(share * 100) });
+  return formatPeople(m.population.isolated, approx);
 }
 
 /** When access returns for the places the slide cut off, or null when nobody was cut off. */
@@ -29,6 +30,7 @@ export function describeRestored(run: RunResult, set: TargetSet, snapshot: numbe
 }
 
 const REASON_KEY: Record<NonNullable<BriefResult['reason']>, Key> = {
+  hosted: 'brief.reason.hosted',
   no_key: 'brief.reason.no_key',
   unreachable: 'brief.reason.unreachable',
   invalid: 'brief.reason.invalid',
@@ -99,7 +101,7 @@ export function assembleReportData(a: AssembleArgs): ReportData {
         after: minutes(m.median_after_min),
       },
     ],
-    people: describePeople(m),
+    people: describePeople(m, a.graph.populationSource?.kind === 'modelled'),
     restored: describeRestored(a.run, set, a.scenario.snapshot, m),
     worst: m.worst.map((w) => {
       const place = a.graph.places[w.place].name || t('dash.unnamedPlace');
@@ -127,13 +129,26 @@ export function assembleReportData(a: AssembleArgs): ReportData {
         }
       : null,
     assumptions: ASSUMPTIONS.map((x) => ({ label: x.label, value: x.value, unit: x.unit })),
-    sources: a.provenance.map((p) => ({
-      dataset: p.dataset,
-      licence: p.licence,
-      retrieved: p.retrieved_on,
-      coverage: p.coverage_note,
-      gaps: p.gaps,
-    })),
+    sources: [
+      ...a.provenance.map((p) => ({
+        dataset: p.dataset,
+        licence: p.licence,
+        retrieved: p.retrieved_on,
+        coverage: p.coverage_note,
+        gaps: p.gaps,
+      })),
+      ...(a.graph.populationSource
+        ? [
+            {
+              dataset: `Population: ${a.graph.populationSource.name}`,
+              licence: a.graph.populationSource.licence ?? '',
+              retrieved: '',
+              coverage: a.graph.populationSource.citation ?? '',
+              gaps: a.graph.populationSource.note,
+            },
+          ]
+        : []),
+    ],
     screenshot: a.screenshot,
     notice: t('app.notice'),
     credits: [t('credits.osm'), t('credits.dem')],

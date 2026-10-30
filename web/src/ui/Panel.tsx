@@ -1,10 +1,10 @@
 import { t } from '../lib/i18n';
 import { useSceneStore } from '../state/store';
 import { DataPanel } from './DataPanel';
-import { BridgeMark } from './Icons';
-import { ScenarioPanel } from './ScenarioPanel';
+import { NewsPanel } from './NewsPanel';
+import { AssumptionsList, ScenarioPanel } from './ScenarioPanel';
 
-/** The left rail: brand, the scenario controls, and the folded-away data notes. */
+/** The left rail: scenario controls, the local news, and the folded-away notes. */
 export function Panel() {
   const status = useSceneStore((s) => s.status);
   const error = useSceneStore((s) => s.error);
@@ -12,17 +12,6 @@ export function Panel() {
 
   return (
     <aside className="rail" aria-label="Scenario controls">
-      <header className="brand">
-        <span className="brand-mark">
-          <BridgeMark />
-        </span>
-        <div>
-          <h1>{t('app.title')}</h1>
-          <p className="muted">{t('app.subtitle')}</p>
-          <p className="faint small">{t('app.area')}</p>
-        </div>
-      </header>
-
       {status === 'loading' && (
         <p role="status" className="muted">
           {t('status.loading')}
@@ -38,6 +27,8 @@ export function Panel() {
       {ready && (
         <>
           <ScenarioPanel />
+          <NewsPanel />
+          <AssumptionsList />
           <DataPanel />
         </>
       )}

@@ -61,7 +61,7 @@ export interface BriefResult {
   /** a short explanation from the server when the template was used, such as how to fix it */
   detail?: string;
   /** why the template was used instead of the AI service */
-  reason?: 'no_key' | 'unreachable' | 'invalid' | 'language' | 'error';
+  reason?: 'no_key' | 'unreachable' | 'invalid' | 'language' | 'error' | 'hosted';
 }
 
 export const BRIEF_LIMITS = {

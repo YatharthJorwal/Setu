@@ -134,7 +134,7 @@ export function buildReportHtml(data: ReportData): string {
   <h2>${e(t('report.sources'))}</h2>
   ${data.sources
     .map(
-      (src) => `<p><strong>${e(src.dataset)}</strong><br>${e(src.licence)}<br><span class="small">${e(t('report.retrieved', { date: src.retrieved }))}. ${e(src.coverage)}</span><br><span class="small">${e(t('data.gaps'))}: ${e(src.gaps)}</span></p>`,
+      (src) => `<p><strong>${e(src.dataset)}</strong><br>${e(src.licence)}<br><span class="small">${src.retrieved ? `${e(t('report.retrieved', { date: src.retrieved }))}. ` : ''}${e(src.coverage)}</span><br><span class="small">${e(t('data.gaps'))}: ${e(src.gaps)}</span></p>`,
     )
     .join('')}
   ${data.credits.map((c) => `<p class="small">${e(c)}</p>`).join('')}

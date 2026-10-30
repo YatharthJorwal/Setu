@@ -11,7 +11,7 @@ import { useSceneStore } from '../state/store';
 import { Segmented } from './Segmented';
 import { Tag } from './Tag';
 
-function AssumptionsList() {
+export function AssumptionsList() {
   const bases = [...new Set(ASSUMPTIONS.map((a) => a.basis))];
   return (
     <details className="card fold">
@@ -174,8 +174,6 @@ export function ScenarioPanel() {
           </ul>
         </section>
       )}
-
-      <AssumptionsList />
     </>
   );
 }

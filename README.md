@@ -67,6 +67,23 @@ The situation brief is written by a language model and every figure is checked a
 
 Work in one folder only. Copies of this repo unpacked elsewhere (for example in Downloads) are stale and must not be committed from. `run.bat info` shows which folder you are in and whether it is up to date; `run.bat save "message"` commits and pushes from the right place.
 
+### Population and news
+
+```
+run.bat population      # estimates people per village from WorldPop (reads only the corridor), then rebuilds the graph
+run.bat news            # fetches fresh local headlines for the news card
+```
+
+The top bar shows how many people live in the corridor and how many the current scenario cuts off. These are modelled estimates, labelled as such. The news card lists recent headlines about the area with a filter; on the hosted site a scheduled job refreshes them every three hours.
+
+### Hosting on GitHub Pages
+
+1. In the repository: Settings > Pages > Build and deployment > Source: **GitHub Actions**.
+2. Commit the processed map files (`data/processed`, including `graph.json`) and `web/package-lock.json`: the build needs them.
+3. Push to `main`. The workflow in `.github/workflows/pages.yml` builds the site and publishes it at `https://<your-user>.github.io/Setu/`. It also runs every three hours to refresh the news, and can be started from the Actions tab.
+
+The AI situation brief runs only on a local model, so on the hosted site it shows the labelled rule-based summary.
+
 On Windows, `run.bat` does all of this in one step (installing packages, fetching and building data if missing, then starting the app). `run.bat help` lists the other commands.
 
 ## Data and attribution

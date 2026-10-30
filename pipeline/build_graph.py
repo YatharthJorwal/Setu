@@ -223,6 +223,7 @@ def build_graph(
     places_raw: dict,
     box: Box,
     tier_overrides: dict | None = None,
+    population: dict | None = None,
 ) -> dict:
     segs = build_segments(roads_raw, box)
     incident: dict[Key, list[int]] = defaultdict(list)
@@ -307,11 +308,16 @@ def build_graph(
                 }
             )
 
-    def attach(rows: list[dict], snaps: list[tuple[Key | None, float]]) -> list[dict]:
+    people = (population or {}).get("places", {})
+
+    def attach(rows: list[dict], snaps: list[tuple[Key | None, float]], with_population: bool = False) -> list[dict]:
         out = []
         for r, (key, dist) in zip(rows, snaps):
             node = node_index.get(key) if key is not None else None
-            out.append({**r, "node": node, "snap_m": round(dist, 0) if math.isfinite(dist) else None})
+            row = {**r, "node": node, "snap_m": round(dist, 0) if math.isfinite(dist) else None}
+            if with_population and r["id"] in people:
+                row["population"] = int(people[r["id"]])
+            out.append(row)
         return out
 
     graph = {
@@ -319,9 +325,11 @@ def build_graph(
         "classes": list(CLASS_ORDER),
         "nodes": nodes,
         "edges": edges,
-        "places": attach(places, place_snaps),
+        "places": attach(places, place_snaps, with_population=True),
         "facilities": attach(facilities, fac_snaps),
     }
+    if population and population.get("source"):
+        graph["population_source"] = population["source"]
     graph["stats"] = graph_stats(graph)
     return graph
 
@@ -373,6 +381,8 @@ def graph_stats(graph: dict) -> dict:
         "facilities_total": len(graph["facilities"]),
         "facilities_snapped": sum(r["node"] is not None for r in graph["facilities"]),
         "facilities_in_main": sum(in_main(r) for r in graph["facilities"]),
+        "places_with_population": sum("population" in r for r in graph["places"]),
+        "population_total": sum(r.get("population", 0) for r in graph["places"]),
         "facility_tiers_guess": sum(r["tier_source"] == "guess" for r in graph["facilities"]),
         "facility_tiers_curated": sum(r["tier_source"] == "curated" for r in graph["facilities"]),
     }
@@ -409,7 +419,9 @@ def main() -> None:
         return
 
     overrides = load_tier_overrides(TIER_CSV)
-    graph = build_graph(_load(area.key, "roads"), health, _load(area.key, "places"), box, overrides)
+    pop_path = PROCESSED / "population.json"
+    population = json.loads(pop_path.read_text(encoding="utf-8")) if pop_path.exists() else None
+    graph = build_graph(_load(area.key, "roads"), health, _load(area.key, "places"), box, overrides, population)
     out = PROCESSED / "graph.json"
     out.write_text(json.dumps(graph, separators=(",", ":")), encoding="utf-8")
     s = graph["stats"]
@@ -417,6 +429,10 @@ def main() -> None:
     print(f"  nodes {s['nodes']}, edges {s['edges']}, {s['total_km']} km, components {s['components']}, main holds {s['main_component_share']:.0%}")
     print(f"  places: {s['places_snapped']}/{s['places_total']} snapped, {s['places_in_main']} on the main network")
     print(f"  facilities: {s['facilities_snapped']}/{s['facilities_total']} snapped, {s['facilities_in_main']} on the main network")
+    if s["places_with_population"]:
+        print(f"  population: {s['population_total']:,} people across {s['places_with_population']} places ({graph['population_source']['name']})")
+    else:
+        print("  population: none loaded (run: python -m pipeline.population)")
     print(f"  facility tiers: {s['facility_tiers_curated']} curated, {s['facility_tiers_guess']} still name-based guesses")
 
 

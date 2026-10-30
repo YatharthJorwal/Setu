@@ -2,6 +2,7 @@ export * from './assumptions';
 export * from './criticality';
 export * from './graph';
 export * from './metrics';
+export * from './population';
 export * from './report';
 export * from './rng';
 export * from './routing';

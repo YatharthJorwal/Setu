@@ -1,3 +1,4 @@
+import { roundPeople } from '../lib/format';
 import { clearanceHours, edgeSummary, freeSpeedKmh } from '../sim';
 import type { RoadGraph, RunResult, Severity, TargetSet } from '../sim';
 import { BRIEF_LIMITS, type BriefInput, type BriefLanguage, type BriefMetric } from './types';
@@ -28,7 +29,11 @@ export function buildBriefInput(graph: RoadGraph, run: RunResult, settings: Brie
 
   const restored = run.restoredAfter_h[set].filter((h): h is number => h !== null);
   const share = m.population.known_share_isolated;
-  const peopleKnown = m.places_isolated === 0 ? 0 : share === 1 ? m.population.isolated : null;
+  const peopleKnown = m.places_isolated === 0 ? 0 : share === 1 ? roundPeople(m.population.isolated) : null;
+  // an estimate is a modelled figure, not a measurement: tag and label it that way
+  const modelled = graph.populationSource?.kind === 'modelled';
+  const tag = modelled ? ('assumption' as const) : ('data' as const);
+  const corridorTotal = graph.places.reduce((sum, p) => sum + (p.population ?? 0), 0);
 
   const metrics: Record<string, BriefMetric> = {
     cut_off_places: { value: m.places_isolated, unit: 'places', tag: 'data', label: 'Places cut off' },
@@ -36,8 +41,11 @@ export function buildBriefInput(graph: RoadGraph, run: RunResult, settings: Brie
     delayed_places_after: { value: m.places_delayed, unit: 'places', tag: 'assumption', label: `Places beyond ${T} minutes after the slide` },
     typical_access_min_before: { value: roundOrNull(m.median_before_min), unit: 'min', tag: 'assumption', label: 'Typical access time before the slide' },
     typical_access_min_after: { value: roundOrNull(m.median_after_min), unit: 'min', tag: 'assumption', label: 'Typical access time after the slide' },
-    people_cut_off: { value: peopleKnown, unit: 'people', tag: 'data', label: 'People cut off' },
+    people_cut_off: { value: peopleKnown, unit: 'people', tag, label: modelled ? 'People cut off (estimate)' : 'People cut off' },
   };
+  if (corridorTotal > 0) {
+    metrics.corridor_people = { value: roundPeople(corridorTotal), unit: 'people', tag, label: modelled ? 'People in the corridor (estimate)' : 'People in the corridor' };
+  }
   if (restored.length > 0) {
     metrics.restored_after_h_min = { value: Math.min(...restored), unit: 'h', tag: 'assumption', label: 'Earliest time access returns' };
     metrics.restored_after_h_max = { value: Math.max(...restored), unit: 'h', tag: 'assumption', label: 'Latest time access returns' };

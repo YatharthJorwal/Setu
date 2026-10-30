@@ -36,6 +36,10 @@ export function templateBrief(input: BriefInput): BriefOutput {
 
   const key_risks: string[] = [];
   if (cut > 0) key_risks.push(`${cut} places lose their only route to ${dest} until the road is cleared.`);
+  if (cut > 0 && people !== null && people > 0) {
+    const estimate = input.metrics.people_cut_off?.tag === 'assumption' ? ', a modelled estimate' : '';
+    key_risks.push(`About ${people} people live in the places cut off${estimate}.`);
+  }
   if (delayedAfter > delayedBefore) key_risks.push(`${delayedAfter} places would be beyond ${s.threshold_min} minutes from ${dest}.`);
   const named = input.top_affected.slice(0, 3).map((t) => {
     if (t.status === 'cut_off') return `${t.place} (cut off)`;

@@ -158,3 +158,31 @@ Decision:
 - The page includes the run record, so a reader can see exactly what inputs and seed produced the numbers.
 - If the new tab is blocked, the same page is offered as a file download.
 Consequences: No new dependency, works offline. Page breaks and the browser's own header and footer lines in the print dialog are not controlled by the page: turn off "Headers and footers" in the print options for a clean copy. The map picture depends on the browser allowing canvas readback, and falls back to no picture if it does not.
+
+## ADR-016: Population is a modelled estimate from a gridded dataset, shown at the top
+Date: 2026-10-27
+Status: Accepted
+Context: How many people a closure cuts off is the headline of the project, but no village-level population was loaded. Census village figures need manual downloads and name matching that cannot be checked without the files; a gridded dataset can be applied automatically.
+Decision:
+- Use WorldPop 2020, India, 100 m, constrained to built-settlement areas (CC BY 4.0). The corridor window is read straight from the published raster, so no 500 MB download is needed; a downloaded file also works.
+- Each raster cell's people are shared equally among the places inside the cell; a cell with no place inside goes to the nearest place within 3 km; the rest are reported as unallocated. Nothing is created or lost (tested).
+- The result is written to `data/processed/population.json` and attached to the graph (`population`, `population_source`). Every figure is labelled an estimate: approximate sign, rounded, tagged, and cited in the app, the report and the brief.
+- The top bar shows the corridor total and the people cut off by the current scenario. People in places the model cannot analyse are reported separately, never counted as safe.
+Consequences: Immediate, reproducible numbers with honest labelling. Estimates for single hamlets are rough, and 2020 modelled data is not the census; official Census 2011 figures should replace them where available (the file format already carries a `census` kind). Not yet run by the author against the real raster.
+
+## ADR-017: News comes from a scheduled job, not from the browser
+Date: 2026-10-27
+Status: Accepted
+Context: The news card needs fresh, area-relevant headlines with a picture each, on a static host with no server. Browsers cannot read most news feeds (no cross-origin permission), and the headline search service that supplies article pictures should not be hit by every visitor.
+Decision:
+- A small script (`pipeline/news.py`) asks the GDELT Project for English and Hindi articles that mention the corridor's places, or Uttarakhand with roads, weather or health topics. It keeps only relevant headlines (a place-name match; Uttarakhand-wide items only with a topic; headlines about the film Kedarnath are dropped), removes duplicates and anything older than 30 days, and writes `news.json`.
+- The GitHub Actions deploy runs it every three hours and on every push, so the hosted site always carries a recent list with no server and no third-party request at view time. A failed fetch never blocks a deploy.
+- The page re-reads the list every 15 minutes and on Refresh. Filters (Local, Roads, Weather, Health) work on tags added by the script. Links open at the publisher; images load from the publisher and fall back to a letter tile.
+Consequences: Fresh within about three hours, resilient, no keys. Relevance is keyword-based and will occasionally let a headline through or miss one. GDELT can be slow or rate-limited; then the card says news is unavailable. Not yet run by the author against the live service.
+
+## ADR-018: Hosting on GitHub Pages; the AI brief is local-only
+Date: 2026-10-27
+Status: Accepted
+Context: The author will host the same repository on GitHub Pages. A static host cannot run the brief's server route, and a hosted page cannot reach a model on a visitor's computer.
+Decision: A workflow (`.github/workflows/pages.yml`) builds and deploys the site on every push, by hand, and every three hours. The build uses the base path `/Setu/`. The brief is flagged "Local AI only"; on a hosted copy it skips the network request and shows the labelled template with a note saying there is no local model; on a local copy with Ollama stopped it says to start Ollama. Reading a local model from a hosted page was rejected as unreliable (browser rules on reaching a local network from a public page).
+Consequences: Visitors see everything except the AI-written brief, which is demonstrated from the author's own computer. The processed data under `data/processed` must be committed for the build to work.

@@ -164,6 +164,24 @@ describe('buildBriefInput', () => {
     expect(input.language).toBe('hi');
   });
 
+  it('tags an estimate as modelled and rounds it, and adds the corridor total', () => {
+    const g = makeGraph({
+      populationSource: { name: 'WorldPop 2020 estimate', kind: 'modelled', year: 2020, note: 'n' },
+      nodes: 3, edges: [[0, 1], [1, 2]], facilities: [{ node: 0, tier: 'chc' }],
+      places: [{ node: 1, population: 1234 }, { node: 2, population: 5678 }],
+    });
+    const run = runScenario(g, { type: 'landslide', edge: 0, severity: 'minor' });
+    const input = buildBriefInput(g, run, { edge: 0, severity: 'minor', tGoldenMin: 60, targetSet: 'emergency' }, 'en');
+    expect(input.metrics.people_cut_off.value).toBe(6900);
+    expect(input.metrics.people_cut_off.tag).toBe('assumption');
+    expect(input.metrics.people_cut_off.label).toContain('estimate');
+    expect(input.metrics.corridor_people.value).toBe(6900);
+    const brief = templateBrief(input);
+    expect(brief.key_risks.join(' ')).toContain('About 6900 people');
+    expect(brief.key_risks.join(' ')).toContain('modelled estimate');
+    expect(() => validateBrief(brief, input)).not.toThrow();
+  });
+
   it('gives zero people when nobody is cut off', () => {
     const g = makeGraph({ nodes: 3, edges: [[0, 1], [1, 2], [2, 0]], facilities: [{ node: 0, tier: 'chc' }], places: [{ node: 1 }] });
     const run = runScenario(g, { type: 'landslide', edge: 0, severity: 'minor' });

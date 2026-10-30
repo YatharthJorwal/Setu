@@ -26,3 +26,6 @@ data/raw/*
 
 # web app: data copied from data/processed by scripts/sync-data.mjs
 web/public/data/
+
+# fetched fresh by the scheduled deploy (or run.bat news), not committed
+data/processed/news.json

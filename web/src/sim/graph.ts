@@ -29,6 +29,16 @@ export interface GraphFacilityFile extends GraphPlaceFile {
   tier_source: string;
 }
 
+export interface PopulationSource {
+  name: string;
+  /** "census" is a count; "modelled" is an estimate and is always shown as one */
+  kind: 'census' | 'modelled';
+  year: number | null;
+  note: string;
+  licence?: string;
+  citation?: string;
+}
+
 export interface GraphFile {
   version: number;
   classes: string[];
@@ -36,6 +46,7 @@ export interface GraphFile {
   edges: GraphEdgeFile[];
   places: GraphPlaceFile[];
   facilities: GraphFacilityFile[];
+  population_source?: PopulationSource;
 }
 
 // ---- validation -------------------------------------------------------------------------------
@@ -117,7 +128,18 @@ export function parseGraph(json: unknown): GraphFile {
       tier_source: String(f.tier_source ?? 'guess'),
     };
   });
-  return { version: num(json, 'version', 'file'), classes, nodes, edges, places, facilities };
+  const ps = json.population_source;
+  const population_source: PopulationSource | undefined = isRec(ps)
+    ? {
+        name: String(ps.name ?? 'Population data'),
+        kind: ps.kind === 'census' ? 'census' : 'modelled',
+        year: typeof ps.year === 'number' ? ps.year : null,
+        note: String(ps.note ?? ''),
+        licence: typeof ps.licence === 'string' ? ps.licence : undefined,
+        citation: typeof ps.citation === 'string' ? ps.citation : undefined,
+      }
+    : undefined;
+  return { version: num(json, 'version', 'file'), classes, nodes, edges, places, facilities, population_source };
 }
 
 // ---- runtime graph ----------------------------------------------------------------------------
@@ -164,6 +186,7 @@ export interface RoadGraph {
   adjEdge: Int32Array;
   places: SimPlace[];
   facilities: SimFacility[];
+  populationSource: PopulationSource | null;
 }
 
 export function otherEnd(graph: RoadGraph, edge: number, node: number): number {
@@ -274,5 +297,6 @@ export function buildRoadGraph(file: GraphFile): RoadGraph {
       tier: f.tier,
       tierSource: f.tier_source,
     })),
+    populationSource: file.population_source ?? null,
   };
 }

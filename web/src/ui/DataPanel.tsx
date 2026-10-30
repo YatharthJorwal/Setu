@@ -9,6 +9,7 @@ const fmt = (n: number): string => n.toLocaleString('en');
 export function DataPanel() {
   const assets = useSceneStore((s) => s.assets);
   const select = useSceneStore((s) => s.select);
+  const graph = useSceneStore((s) => s.graph);
   if (!assets) return null;
   const places = assets.places?.places.length ?? 0;
 
@@ -90,6 +91,9 @@ export function DataPanel() {
             </li>
           ))}
         </ul>
+        {graph?.populationSource?.citation && (
+          <p className="small muted">{t('credits.pop', { citation: graph.populationSource.citation })}</p>
+        )}
         <p className="small muted">{t('credits.osm')}</p>
         <p className="small muted">{t('credits.dem')}</p>
       </details>

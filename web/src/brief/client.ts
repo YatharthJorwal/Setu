@@ -2,6 +2,11 @@ import { templateBrief } from './template';
 import type { BriefInput, BriefResult } from './types';
 import { validateBrief } from './validate';
 
+/** For a hosted copy of the app: there is no local AI model to ask, so the rule-based summary is shown and labelled. */
+export function hostedBrief(input: BriefInput): BriefResult {
+  return { brief: templateBrief(input), source: 'template', reason: 'hosted' };
+}
+
 const TIMEOUT_MS = 130_000; // a local model can take a while to load the first time
 
 /**

@@ -14,6 +14,7 @@ export const FIXTURE_CLASSES = [
 ];
 
 export interface FixtureSpec {
+  populationSource?: GraphFile['population_source'];
   nodes: number;
   /** [a, b, length in metres (default 1000), class name (default secondary)] */
   edges: Array<[number, number, number?, string?]>;
@@ -35,6 +36,7 @@ export function makeGraph(spec: FixtureSpec): RoadGraph {
       p: [78 + a * 0.01, 30, 78 + b * 0.01, 30],
       n: '',
     })),
+    population_source: spec.populationSource,
     places: (spec.places ?? []).map((p, i) => ({
       id: `p${i}`,
       name: `Place ${i}`,

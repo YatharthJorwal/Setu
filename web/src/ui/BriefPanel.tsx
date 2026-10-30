@@ -17,8 +17,14 @@ export function BriefPanel() {
 
   return (
     <section className="brief">
-      <div className="eyebrow">{t('brief.title')}</div>
+      <div className="brief-title">
+        <div className="eyebrow">{t('brief.title')}</div>
+        <span className="chip local" title={t('brief.localOnly')}>
+          {t('brief.localChip')}
+        </span>
+      </div>
       <p className="small muted">{t('brief.hint')}</p>
+      <p className="small faint">{t('brief.localOnly')}</p>
 
       <div className="brief-controls">
         <Segmented<BriefLanguage>
@@ -41,6 +47,12 @@ export function BriefPanel() {
           <span />
           <span />
           <span className="short" />
+        </div>
+      )}
+
+      {result?.source === 'template' && (result.reason === 'hosted' || result.reason === 'unreachable') && (
+        <div role="status" className="callout warn-box fade-in">
+          {t(result.reason === 'hosted' ? 'brief.hosted' : 'brief.unreachableNote')}
         </div>
       )}
 

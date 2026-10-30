@@ -7,6 +7,7 @@ Record at 1080p (Windows: Win+G for the Game Bar, or OBS). Run the app locally w
 | 0:00 | Title: "When the road closes, who gets cut off?" over the terrain | "In Uttarakhand, hill roads fail every monsoon, and a closed road is also a health emergency." |
 | 0:08 | Slow orbit over the Rudraprayag corridor, roads and facilities visible | "This is a real valley, built from open data: roads, health facilities and terrain." |
 | 0:18 | Click the top "Most critical roads" shortcut (NH107). The post and rings appear, the numbers count up | "Close one stretch of NH107, and 142 villages lose their route to emergency care." |
+| 0:24 | Point at the top bar: people in the corridor and people cut off | "And here is how many people that is, as a share of the corridor: a modelled estimate, labelled as one." |
 | 0:30 | Toggle Before and After. Step the timeline to the reopening | "Before, after, and when the road is assumed to reopen." |
 | 0:40 | Switch to Primary care. Drag the delay threshold | "Change what counts as care, or how long is too long, and it updates at once." |
 | 0:50 | Click Write brief. Show the loading, then the brief | "A local AI model writes the brief. It can only use numbers from the simulation, and every figure is checked." |

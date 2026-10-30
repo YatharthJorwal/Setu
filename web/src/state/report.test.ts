@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { BriefResult } from '../brief';
 import { buildBriefInput, templateBrief } from '../brief';
 import { buildReportHtml } from '../report/buildReport';
-import { lineGraph } from '../sim/fixtures';
+import { lineGraph, makeGraph } from '../sim/fixtures';
 import { runScenario } from '../sim/run';
 import { assembleReportData, briefSourceNote, describePeople, describeRestored } from './report';
 import type { BriefState, ScenarioSettings } from './store';
@@ -66,6 +66,21 @@ describe('assembleReportData', () => {
     expect(d.brief?.actions[0].metrics[0]).toBe('Places cut off');
     expect(d.brief?.sourceNote).toContain('Template summary');
     expect(buildReportHtml(d)).toContain('Template summary, not AI');
+  });
+
+  it('adds the population source to the report and rounds an estimate', () => {
+    const g = makeGraph({
+      populationSource: { name: 'WorldPop 2020 estimate', kind: 'modelled', year: 2020, note: 'Modelled estimate', licence: 'CC BY 4.0', citation: 'WorldPop (www.worldpop.org)' },
+      nodes: 3, edges: [[0, 1], [1, 2]], facilities: [{ node: 0, tier: 'chc' }],
+      places: [{ node: 1, population: 1234 }, { node: 2, population: 5678 }],
+    });
+    const r = runScenario(g, { type: 'landslide', edge: 0, severity: 'minor' });
+    const d = assembleReportData({ graph: g, run: r, scenario: { ...scenario, edge: 0 }, brief: idle, provenance, now, screenshot: null });
+    expect(d.people).toBe('≈ 6,900');
+    expect(d.sources[d.sources.length - 1]).toMatchObject({ dataset: 'Population: WorldPop 2020 estimate', licence: 'CC BY 4.0' });
+    const html = buildReportHtml(d);
+    expect(html).toContain('WorldPop (www.worldpop.org)');
+    expect(html).not.toContain('Retrieved . ');
   });
 
   it('refuses to build a report when there is no scenario', () => {

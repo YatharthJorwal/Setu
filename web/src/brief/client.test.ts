@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fetchBrief } from './client';
+import { fetchBrief, hostedBrief } from './client';
 import { sampleInput } from './fixtures';
 import { templateBrief } from './template';
 
@@ -11,6 +11,15 @@ function fake(status: number, json?: unknown, throws = false): typeof fetch {
     return { ok: status >= 200 && status < 300, status, json: async () => json } as unknown as Response;
   }) as unknown as typeof fetch;
 }
+
+describe('hostedBrief', () => {
+  it('gives the labelled template without asking any server', () => {
+    const r = hostedBrief(input);
+    expect(r.source).toBe('template');
+    expect(r.reason).toBe('hosted');
+    expect(r.brief.summary.length).toBeGreaterThan(10);
+  });
+});
 
 describe('fetchBrief', () => {
   it('returns the AI brief when the server answers and it passes the check', async () => {

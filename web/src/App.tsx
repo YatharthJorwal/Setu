@@ -8,6 +8,7 @@ import { FacilityCard } from './ui/FacilityCard';
 import { Legend } from './ui/Legend';
 import { MapToolbar } from './ui/MapToolbar';
 import { Panel } from './ui/Panel';
+import { TopBar } from './ui/TopBar';
 
 function Stage() {
   const status = useSceneStore((s) => s.status);
@@ -44,6 +45,7 @@ export default function App() {
 
   return (
     <div className="app">
+      <TopBar />
       <Panel />
       <main className="stage">
         <Stage />

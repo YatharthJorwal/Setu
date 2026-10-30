@@ -10,6 +10,7 @@ export {
   edgeClassName,
   edgeSummary,
   parseGraph,
+  populationSummary,
   rankCriticalEdges,
   runScenario,
 } from '../sim';
@@ -19,6 +20,8 @@ export type {
   EdgeMutation,
   EdgeSummary,
   PlaceAccess,
+  PopulationSource,
+  PopulationSummary,
   RoadGraph,
   RunResult,
   SetMetrics,

@@ -1,13 +1,15 @@
 import { create } from 'zustand';
-import { buildBriefInput, fetchBrief, type BriefInput, type BriefLanguage, type BriefResult } from '../brief';
+import { buildBriefInput, fetchBrief, hostedBrief, type BriefInput, type BriefLanguage, type BriefResult } from '../brief';
 import { loadAssets, type Assets } from '../lib/assets';
 import type { Facility } from '../lib/types';
 import { loadGraph } from './graphLoader';
 import {
   T_GOLDEN_MIN_DEFAULT,
+  populationSummary,
   rankCriticalEdges,
   runScenario,
   type CriticalEdge,
+  type PopulationSummary,
   type RoadGraph,
   type RunResult,
   type Severity,
@@ -36,6 +38,12 @@ export interface BriefState {
   input: BriefInput | null;
 }
 
+/**
+ * The AI brief needs a server route (the dev server's /api/brief) that talks to a model on the same computer.
+ * A hosted static copy has none, so it skips the request and says so. VITE_BRIEF_API=on forces it for other setups.
+ */
+const BRIEF_API = import.meta.env.DEV || import.meta.env.VITE_BRIEF_API === 'on';
+
 const IDLE_BRIEF: BriefState = { status: 'idle', result: null, input: null };
 /** bumped whenever the scenario changes, so a late answer for an old scenario is dropped */
 let briefToken = 0;
@@ -48,6 +56,7 @@ interface SceneState {
   graph: RoadGraph | null;
   graphError: string | null;
   quickPicks: CriticalEdge[];
+  corridor: PopulationSummary | null;
   layers: Record<LayerKey, boolean>;
   exaggeration: number;
   selected: Facility | null;
@@ -111,6 +120,7 @@ export const useSceneStore = create<SceneState>()((set, get) => {
     graph: null,
     graphError: null,
     quickPicks: [],
+    corridor: null,
     layers: { roads: true, facilities: true, places: true },
     exaggeration: 1.6,
     selected: null,
@@ -133,7 +143,12 @@ export const useSceneStore = create<SceneState>()((set, get) => {
       }
       try {
         const graph = await loadGraph(base);
-        set({ graph, graphError: null, quickPicks: rankCriticalEdges(graph, { top: 4, onePerRoad: true }) });
+        set({
+          graph,
+          graphError: null,
+          quickPicks: rankCriticalEdges(graph, { top: 4, onePerRoad: true }),
+          corridor: populationSummary(graph),
+        });
       } catch (err) {
         set({ graphError: err instanceof Error ? err.message : String(err) });
       }
@@ -179,7 +194,7 @@ export const useSceneStore = create<SceneState>()((set, get) => {
       );
       const token = ++briefToken;
       set({ brief: { status: 'loading', result: null, input } });
-      const result = await fetchBrief(input);
+      const result = BRIEF_API ? await fetchBrief(input) : hostedBrief(input);
       if (token !== briefToken) return; // the scenario changed while the answer was on its way
       set({ brief: { status: 'ready', result, input } });
     },
