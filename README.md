@@ -98,8 +98,10 @@ On Windows, `run.bat` does all of this in one step (installing packages, fetchin
 
 ## Data and attribution
 
-Map data © OpenStreetMap contributors (ODbL). Other sources and their licences are listed in [`docs/DATA.md`](docs/DATA.md) and will be shown in the app.
+Map data © OpenStreetMap contributors (ODbL). Terrain: Copernicus GLO-30. Population: WorldPop (www.worldpop.org), University of Southampton, CC BY 4.0. Headlines: GDELT Project, each linking to its publisher. Other sources and their licences are listed in [`docs/DATA.md`](docs/DATA.md) and in the app.
 
 ## Licence
 
-To be decided.
+Copyright (c) 2026 Yatharth Jorwal (Yatharth Webs). All rights reserved. See [`LICENSE`](LICENSE). For reuse or licensing, contact yatharthjorwal@gmail.com.
+
+The licence covers Setu's own code, design and writing. The open datasets above keep their own licences and attribution requirements, which the licence above does not change.
